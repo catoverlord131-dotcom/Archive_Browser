@@ -67,45 +67,7 @@ Keep the black window open while you use it. Closing it stops the server. Start 
 
 ---
 
-## 4. Launch it like an app
-
-### Option A: double-click launcher (easiest)
-
-1. Put `start.bat` in the same folder as the other two files.
-2. Double-click it. It starts the server in a minimized window, then opens ARCHIVE_OS in its own Edge window (no address bar, no browser tabs).
-3. For a desktop icon: right-click `start.bat` > Send to > Desktop (create shortcut).
-4. To quit: close the app window, then close the minimized **ARCHIVE_OS SERVER** window on the taskbar.
-
-`start.bat` uses Microsoft Edge, which is included with Windows 10/11.
-
-### Option B: real desktop app (.exe) with Electron
-
-This bundles the server inside a standalone app, so there is no black window.
-
-1. Put `main.js` and `package.json` in the same folder as `archive_os_browser.html` and `server.js`.
-2. Open Command Prompt in that folder.
-3. Install dependencies (takes a few minutes, downloads about 100-200 MB):
-   ```
-   npm install
-   ```
-4. Try it:
-   ```
-   npm start
-   ```
-5. Build the standalone program:
-   ```
-   npm run build
-   ```
-   The finished `ARCHIVE_OS.exe` appears in the new `dist` folder. You can move it anywhere and make a shortcut to it.
-
-Notes:
-- If the build fails with a permission or symlink error, close Command Prompt, reopen it with **Run as administrator**, and run `npm run build` again.
-- The exe is unsigned, so Windows SmartScreen may warn the first time. Click **More info**, then **Run anyway**, only if you built it yourself.
-- Closing the app window quits the app and stops its built-in server.
-
----
-
-## 5. Using the browser
+## 4. Using the browser
 
 ### Toolbar and tabs
 - **+** opens a new tab. Click the **x** on a tab to close it.
@@ -158,7 +120,7 @@ The wallpaper shows on the login screen, the new-tab page and the search pages. 
 
 ---
 
-## 6. Configuration (optional)
+## 5. Configuration (optional)
 
 Settings go in environment variables before `node server.js`.
 
@@ -180,7 +142,7 @@ If you change the port, open CFG > BROWSER and set **PROXY_SERVER** to match (fo
 
 ---
 
-## 7. How it works (short version)
+## 6. How it works (short version)
 
 - `server.js` serves the interface and acts as the proxy.
 - Each website gets its own address of the form `https://example.com` -> `http://example.com.s.px.localhost:3000`. Browsers resolve `*.localhost` to your own computer automatically, so each site is isolated from the interface and from other sites.
@@ -190,7 +152,7 @@ If you change the port, open CFG > BROWSER and set **PROXY_SERVER** to match (fo
 
 ---
 
-## 8. macOS and Linux
+## 7. macOS and Linux
 
 1. Install Node.js 18+ from nodejs.org (or your package manager).
 2. In a terminal in the project folder:
@@ -203,7 +165,7 @@ If you change the port, open CFG > BROWSER and set **PROXY_SERVER** to match (fo
 
 ---
 
-## 9. Troubleshooting
+## 8. Troubleshooting
 
 **`'node' is not recognized`**
 Node is not installed or the terminal was open during install. Close all Command Prompt windows and open a new one. If it still fails, restart your PC or reinstall with the .msi.
@@ -240,7 +202,7 @@ Data is stored per address. If you changed the port or opened the HTML file dire
 
 ---
 
-## 10. Limitations
+## 9. Limitations
 
 - **Heavy or protected sites** (for example YouTube, Google, Instagram, banking sites, sites with strong bot checks or required real-time connections) may only partly load or not load at all.
 - **WebSockets** are not supported, so chat-style or live features on some sites will not work.
@@ -252,13 +214,13 @@ Data is stored per address. If you changed the port or opened the HTML file dire
 
 ---
 
-## 11. Using it at school or work
+## 10. Using it at school or work
 
 Managed computers and networks can block installing Node.js, running local servers, or visiting some sites. This project does not try to get around those rules. Use it on a personal computer where you are allowed to install software, and follow your school or workplace policies. Some online coding sites (such as CodeHS) block code that contains links to non-educational sites, and it will not save or run there.
 
 ---
 
-## 12. Updating and uninstalling
+## 11. Updating and uninstalling
 
 - **Update**: replace `archive_os_browser.html` and `server.js` with the newer versions and restart the server. Your settings stay (they are stored by the browser).
 - **Uninstall**: delete the folder. To remove saved settings, use CFG > SYSTEM > WIPE_ALL_DATA first, or clear site data for `localhost`.

@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARCHIVE_OS // BROWSER</title>
+<style>
+:root {
+  --main: #ffcc00;
+  --main-dim: rgba(255,204,0,0.15);
+  --main-border: rgba(255,204,0,0.35);
+  --bg: #0a0a0a;
+  --bg2: #111;
+  --bg3: #1a1a1a;
+  --font: 'Courier New', monospace;
+  --red: #ff4444;
+  --green: #44ff88;
+  --blue: #44aaff;
+  --text-muted: rgba(255,204,0,0.5);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{background:var(--bg);color:var(--main);font-family:var(--font);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+/* ══ SCROLLBAR ══ */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:#000;}
+::-webkit-scrollbar-thumb{background:var(--main-border);}
+
+/* ══ LOGIN ══ */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0;}
+.login-scanline{position:absolute;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px);pointer-events:none;}
+.login-box{border:1px solid var(--main);padding:40px 50px;text-align:center;background:rgba(0,0,0,0.9);width:380px;position:relative;}
+.login-title{font-size:22px;letter-spacing:6px;margin-bottom:4px;}
+.login-sub{font-size:9px;letter-spacing:3px;color:var(--text-muted);margin-bottom:30px;}
+.login-field{margin-bottom:12px;text-align:left;}
+.login-field label{display:block;font-size:9px;letter-spacing:2px;color:var(--text-muted);margin-bottom:4px;}
+.login-field input{width:100%;background:#000;border:1px solid var(--main-border);color:var(--main);font-family:var(--font);padding:10px 12px;font-size:12px;outline:none;transition:.2s;}
+.login-field input:focus{border-color:var(--main);box-shadow:0 0 8px rgba(255,204,0,0.2);}
+.login-check{display:flex;align-items:center;gap:8px;margin:10px 0 20px;font-size:9px;letter-spacing:2px;color:var(--text-muted);}
+.login-check input{width:auto;margin:0;}
+.btn-primary{width:100%;padding:12px;background:var(--main);color:#000;border:none;font-family:var(--font);font-weight:bold;font-size:11px;letter-spacing:3px;cursor:pointer;transition:.2s;}
+.btn-primary:hover{background:#fff;box-shadow:0 0 20px #fff;}
+.login-divider{border:none;border-top:1px solid var(--main-border);margin:15px 0;}
+.btn-secondary{width:100%;padding:10px;background:transparent;color:var(--main);border:1px solid var(--main-border);font-family:var(--font);font-size:10px;letter-spacing:2px;cursor:pointer;transition:.2s;margin-top:8px;}
+.btn-secondary:hover{border-color:var(--main);background:var(--main-dim);}
+#login-error{color:var(--red);font-size:10px;margin-top:10px;letter-spacing:1px;min-height:14px;}
+.login-corner{position:absolute;width:8px;height:8px;border-color:var(--main);}
+.login-corner.tl{top:6px;left:6px;border-top:1px solid;border-left:1px solid;}
+.login-corner.tr{top:6px;right:6px;border-top:1px solid;border-right:1px solid;}
+.login-corner.bl{bottom:6px;left:6px;border-bottom:1px solid;border-left:1px solid;}
+.login-corner.br{bottom:6px;right:6px;border-bottom:1px solid;border-right:1px solid;}
+
+/* ══ BROWSER SHELL ══ */
+#browser{display:none;flex-direction:column;height:100vh;width:100%;}
+
+/* ══ TAB BAR ══ */
+.tab-bar{display:flex;align-items:stretch;background:rgba(0,0,0,0.9);border-bottom:1px solid var(--main-border);min-height:32px;overflow-x:auto;overflow-y:hidden;}
+.tab-bar::-webkit-scrollbar{height:2px;}
+.tab{display:flex;align-items:center;gap:6px;padding:0 10px;border-right:1px solid var(--main-border);color:var(--main);font-size:9px;letter-spacing:1px;cursor:pointer;min-width:100px;max-width:160px;white-space:nowrap;overflow:hidden;transition:.15s;flex-shrink:0;}
+.tab:hover{background:var(--main-dim);}
+.tab.active{background:rgba(255,204,0,0.12);border-bottom:2px solid var(--main);}
+.tab-favicon{width:10px;height:10px;flex-shrink:0;}
+.tab-title{flex:1;overflow:hidden;text-overflow:ellipsis;}
+.tab-close{color:rgba(255,80,80,0.7);font-size:13px;line-height:1;padding:0 2px;flex-shrink:0;}
+.tab-close:hover{color:var(--red);}
+.tab-new{display:flex;align-items:center;justify-content:center;padding:0 14px;cursor:pointer;color:var(--text-muted);font-size:18px;flex-shrink:0;transition:.15s;}
+.tab-new:hover{color:var(--main);background:var(--main-dim);}
+
+/* ══ TOOLBAR ══ */
+.toolbar{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg2);border-bottom:1px solid var(--main-border);}
+.nav-btn{background:transparent;border:1px solid var(--main-border);color:var(--main);font-family:var(--font);font-size:9px;letter-spacing:1px;padding:5px 10px;cursor:pointer;transition:.15s;white-space:nowrap;flex-shrink:0;}
+.nav-btn:hover{border-color:var(--main);background:var(--main-dim);}
+.nav-btn:disabled{opacity:.3;cursor:default;}
+.nav-btn.icon-btn{padding:5px 8px;font-size:12px;}
+.url-wrap{flex:1;display:flex;gap:0;min-width:0;}
+.url-input{flex:1;background:#000;border:1px solid var(--main-border);color:var(--main);font-family:var(--font);padding:6px 12px;font-size:11px;outline:none;min-width:0;}
+.url-input:focus{border-color:var(--main);}
+.url-go{background:var(--main);color:#000;border:none;font-family:var(--font);font-weight:bold;font-size:11px;letter-spacing:1px;padding:6px 16px;cursor:pointer;transition:.15s;flex-shrink:0;}
+.url-go:hover{background:#fff;}
+.toolbar-sep{width:1px;height:20px;background:var(--main-border);flex-shrink:0;}
+
+/* ══ PANELS (bookmarks, history, etc) ══ */
+.side-panel{position:absolute;top:0;right:0;width:280px;height:100%;background:rgba(5,5,5,0.97);border-left:1px solid var(--main-border);z-index:50;display:none;flex-direction:column;overflow:hidden;}
+.side-panel.open{display:flex;}
+.panel-head{padding:12px 14px;border-bottom:1px solid var(--main-border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.panel-title{font-size:10px;letter-spacing:3px;}
+.panel-close{cursor:pointer;color:var(--text-muted);font-size:16px;line-height:1;}
+.panel-close:hover{color:var(--red);}
+.panel-body{flex:1;overflow-y:auto;padding:10px;}
+.panel-input{width:100%;background:#000;border:1px solid var(--main-border);color:var(--main);font-family:var(--font);padding:7px 10px;font-size:10px;outline:none;margin-bottom:8px;}
+.panel-input:focus{border-color:var(--main);}
+.panel-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid transparent;cursor:pointer;font-size:9px;letter-spacing:1px;transition:.15s;}
+.panel-item:hover{background:var(--main-dim);border-color:var(--main-border);}
+.panel-item-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.panel-item-url{font-size:8px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.panel-item-del{color:rgba(255,80,80,0.5);font-size:14px;flex-shrink:0;}
+.panel-item-del:hover{color:var(--red);}
+.panel-section{font-size:8px;letter-spacing:2px;color:var(--text-muted);padding:8px 8px 4px;border-top:1px solid var(--main-border);margin-top:4px;}
+.panel-btn{width:100%;padding:8px;background:transparent;border:1px solid var(--main-border);color:var(--main);font-family:var(--font);font-size:9px;letter-spacing:2px;cursor:pointer;transition:.15s;margin-top:6px;}
+.panel-btn:hover{background:var(--main-dim);border-color:var(--main);}
+
+/* ══ IFRAME ══ */
+#iframe-wrap{flex:1;position:relative;overflow:hidden;}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:none;display:none;background:#fff;}
+iframe.active{display:block;}
+.iframe-block{position:absolute;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;z-index:5;}
+.iframe-block.show{display:flex;}
+
+/* ══ STATUS BAR ══ */
+.status-bar{display:flex;align-items:center;gap:0;background:#000;border-top:1px solid var(--main-border);font-size:8px;letter-spacing:1px;height:20px;flex-shrink:0;}
+.status-seg{padding:0 12px;border-right:1px solid var(--main-border);height:100%;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.status-seg:last-child{border-right:none;margin-left:auto;}
+.status-dot{width:5px;height:5px;border-radius:50%;}
+.dot-green{background:var(--green);}
+.dot-yellow{background:var(--main);}
+.dot-red{background:var(--red);}
+
+/* ══ MODALS ══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--main);width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;position:relative;}
+.modal-corner{position:absolute;width:8px;height:8px;border-color:var(--main);}
+.modal-corner.tl{top:5px;left:5px;border-top:1px solid;border-left:1px solid;}
+.modal-corner.tr{top:5px;right:5px;border-top:1px solid;border-right:1px solid;}
+.modal-corner.bl{bottom:5px;left:5px;border-bottom:1px solid;border-left:1px solid;}
+.modal-corner.br{bottom:5px;right:5px;border-bottom:1px solid;border-right:1px solid;}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--main-border);font-size:11px;letter-spacing:4px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.modal-x{cursor:pointer;color:var(--text-muted);font-size:18px;}
+.modal-x:hover{color:var(--red);}
+.modal-body{padding:20px;overflow-y:auto;flex:1;}
+.modal-tabs{display:flex;border-bottom:1px solid var(--main-border);flex-shrink:0;}
+.modal-tab{padding:10px 16px;font-size:9px;letter-spacing:2px;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;transition:.15s;}
+.modal-tab:hover{color:var(--main);}
+.modal-tab.active{color:var(--main);border-bottom-color:var(--main);}
+.modal-tab-panel{display:none;}
+.modal-tab-panel.active{display:block;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:9px;letter-spacing:2px;color:var(--text-muted);margin-bottom:5px;}
+.field input,.field select,.field textarea{width:100%;background:#000;border:1px solid var(--main-border);color:var(--main);font-family:var(--font);padding:8px 10px;font-size:11px;outline:none;transition:.2s;}
+.field input:focus,.field select,.field textarea:focus{border-color:var(--main);}
+.field select option{background:#000;}
+.field textarea{resize:vertical;min-height:60px;}
+.color-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:6px;}
+.color-swatch{width:100%;aspect-ratio:1;border:1px solid transparent;cursor:pointer;transition:.15s;}
+.color-swatch:hover,.color-swatch.selected{border-color:var(--main);box-shadow:0 0 8px rgba(255,204,0,0.4);}
+.save-btn{width:100%;padding:11px;background:var(--main);color:#000;border:none;font-family:var(--font);font-weight:bold;font-size:10px;letter-spacing:3px;cursor:pointer;transition:.2s;margin-top:8px;}
+.save-btn:hover{background:#fff;}
+.disk-bar-wrap{width:100%;height:8px;border:1px solid var(--main-border);background:#000;margin-top:5px;}
+.disk-bar-fill{height:100%;background:var(--main);transition:width .5s;}
+.file-inp{width:100%;background:#000;border:1px solid var(--main-border);color:var(--main);padding:7px;font-family:var(--font);font-size:9px;cursor:pointer;}
+.file-inp::-webkit-file-upload-button{background:var(--main);border:none;font-family:var(--font);font-weight:bold;padding:4px 10px;cursor:pointer;margin-right:8px;font-size:9px;}
+.modal-status{font-size:9px;text-align:center;min-height:12px;letter-spacing:1px;margin-bottom:8px;}
+.shortcut-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,204,0,0.08);font-size:9px;}
+.shortcut-key{background:#000;border:1px solid var(--main-border);padding:2px 6px;letter-spacing:1px;}
+
+/* ══ NEW TAB PAGE ══ */
+#newtab{position:absolute;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:28px;z-index:3;overflow-y:auto;padding:40px 20px;}
+#newtab.show{display:flex;}
+.nt-clock{font-size:64px;letter-spacing:6px;line-height:1;}
+.nt-date{font-size:11px;letter-spacing:4px;color:var(--text-muted);}
+.nt-search-wrap{width:100%;max-width:600px;display:flex;gap:0;}
+.nt-search{flex:1;background:rgba(0,0,0,0.8);border:1px solid var(--main);color:var(--main);font-family:var(--font);padding:14px 18px;font-size:14px;outline:none;letter-spacing:1px;}
+.nt-search:focus{box-shadow:0 0 20px rgba(255,204,0,0.2);}
+.nt-go{background:var(--main);color:#000;border:none;font-family:var(--font);font-weight:bold;padding:14px 22px;cursor:pointer;font-size:12px;letter-spacing:2px;}
+.nt-go:hover{background:#fff;}
+.nt-bm-title{font-size:9px;letter-spacing:4px;color:var(--text-muted);}
+.nt-bm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;width:100%;max-width:700px;}
+.nt-bm-item{background:rgba(0,0,0,0.7);border:1px solid var(--main-border);padding:12px 8px;text-align:center;cursor:pointer;transition:.15s;font-size:9px;letter-spacing:1px;}
+.nt-bm-item:hover{border-color:var(--main);background:var(--main-dim);}
+.nt-bm-icon{font-size:18px;margin-bottom:5px;}
+.nt-bm-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.nt-stats{display:flex;gap:20px;font-size:8px;letter-spacing:2px;color:var(--text-muted);}
+.nt-stat{text-align:center;}
+.nt-stat span{display:block;font-size:14px;color:var(--main);letter-spacing:2px;}
+
+/* ══ CONTEXT MENU ══ */
+.ctx-menu{position:fixed;background:rgba(5,5,5,0.98);border:1px solid var(--main-border);z-index:500;min-width:160px;display:none;}
+.ctx-menu.show{display:block;}
+.ctx-item{padding:8px 14px;font-size:9px;letter-spacing:2px;cursor:pointer;transition:.15s;}
+.ctx-item:hover{background:var(--main-dim);color:var(--main);}
+.ctx-sep{height:1px;background:var(--main-border);margin:3px 0;}
+
+/* ══ TOAST ══ */
+#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.95);border:1px solid var(--main);padding:8px 20px;font-size:10px;letter-spacing:2px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;}
+#toast.show{opacity:1;}
+
+/* ══ DOWNLOAD NOTIF ══ */
+#dl-bar{position:fixed;bottom:25px;right:20px;background:var(--bg2);border:1px solid var(--main-border);padding:10px 14px;font-size:9px;letter-spacing:1px;z-index:400;min-width:200px;display:none;}
+#dl-bar.show{display:block;}
+
+/* ══ WALLPAPER LAYER ══ */
+#wallpaper{position:fixed;inset:0;z-index:0;display:none;background-size:cover;background-position:center;background-repeat:no-repeat;}
+#wallpaper.on{display:block;}
+#wp-dim{position:absolute;inset:0;background:#000;opacity:.45;}
+#browser{position:relative;z-index:1;}
+body.has-wp #newtab{background:transparent;}
+body.has-wp #login-screen{background:transparent;}
+body.has-wp .nt-clock,body.has-wp .nt-date,body.has-wp .nt-bm-title,body.has-wp .nt-stats{text-shadow:0 0 10px #000,0 0 2px #000;}
+iframe.internal{background:transparent;}
+</style>
+</head>
+<body>
+
+<!-- ══ WALLPAPER ══ -->
+<div id="wallpaper"><div id="wp-dim"></div></div>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-screen">
+  <div class="login-scanline"></div>
+  <div class="login-box">
+    <div class="login-corner tl"></div><div class="login-corner tr"></div>
+    <div class="login-corner bl"></div><div class="login-corner br"></div>
+    <div class="login-title">ARCHIVE_OS</div>
+    <div class="login-sub">SECURE_BROWSER // v3.0.0</div>
+    <div class="login-field">
+      <label>OPERATOR_ID</label>
+      <input type="text" id="li-user" placeholder="Enter username..." value="admin">
+    </div>
+    <div class="login-field">
+      <label>ACCESS_KEY</label>
+      <input type="password" id="li-pass" placeholder="Enter password..." value="1234" onkeypress="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-check">
+      <input type="checkbox" id="li-remember" checked>
+      <label for="li-remember">REMEMBER_SESSION</label>
+    </div>
+    <button class="btn-primary" onclick="doLogin()">[ AUTHENTICATE ]</button>
+    <hr class="login-divider">
+    <div style="font-size:8px;letter-spacing:2px;color:var(--text-muted);text-align:center;">GUEST ACCESS AVAILABLE</div>
+    <button class="btn-secondary" onclick="doGuestLogin()">[ CONTINUE AS GUEST ]</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<!-- ══ BROWSER ══ -->
+<div id="browser">
+  <div class="tab-bar" id="tab-bar">
+    <div class="tab-new" onclick="newTab()" title="New Tab [Ctrl+T]">+</div>
+  </div>
+  <div class="toolbar">
+    <button class="nav-btn" id="btn-back" onclick="navBack()" disabled>◄</button>
+    <button class="nav-btn" id="btn-fwd" onclick="navFwd()" disabled>►</button>
+    <button class="nav-btn" onclick="navRefresh()">↺</button>
+    <button class="nav-btn" onclick="navHome()">⌂</button>
+    <div class="toolbar-sep"></div>
+    <div class="url-wrap">
+      <input type="text" id="url-bar" class="url-input" placeholder="URL or search ARCHIVE..." onkeypress="if(event.key==='Enter')navigate()">
+      <button class="url-go" onclick="navigate()">GO</button>
+    </div>
+    <div class="toolbar-sep"></div>
+    <button class="nav-btn" onclick="bookmarkCurrent()" title="Bookmark [Ctrl+D]">☆</button>
+    <button class="nav-btn" onclick="openPanel('bm-panel')" title="Bookmarks">BM</button>
+    <button class="nav-btn" onclick="openPanel('hist-panel')" title="History">HX</button>
+    <button class="nav-btn" onclick="openPanel('dl-panel')" title="Downloads">DL</button>
+    <div class="toolbar-sep"></div>
+    <button class="nav-btn" onclick="openSettings()" title="Settings">CFG</button>
+  </div>
+
+  <div id="iframe-wrap">
+    <!-- iframes injected here -->
+    <!-- New Tab page -->
+    <div id="newtab">
+      <div class="nt-clock" id="nt-clock">00:00:00</div>
+      <div class="nt-date" id="nt-date">LOADING...</div>
+      <div class="nt-search-wrap">
+        <input type="text" class="nt-search" id="nt-search" placeholder="SEARCH_OR_NAVIGATE..." onkeypress="if(event.key==='Enter')ntSearch()">
+        <button class="nt-go" onclick="ntSearch()">GO</button>
+      </div>
+      <div class="nt-bm-title">QUICK_ACCESS</div>
+      <div class="nt-bm-grid" id="nt-bm-grid"></div>
+      <div class="nt-stats">
+        <div class="nt-stat"><span id="nt-tabs">0</span>TABS</div>
+        <div class="nt-stat"><span id="nt-bm-count">0</span>BOOKMARKS</div>
+        <div class="nt-stat"><span id="nt-hist-count">0</span>HISTORY</div>
+        <div class="nt-stat"><span id="nt-session">GUEST</span>OPERATOR</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-seg"><div class="status-dot dot-green" id="st-dot"></div><span id="st-status">CONNECTED</span></div>
+    <div class="status-seg" id="st-url-seg">about:newtab</div>
+    <div class="status-seg" id="st-tabs-seg">TABS: 0</div>
+    <div class="status-seg" id="st-mem-seg">MEM: 0KB</div>
+    <div class="status-seg" id="st-clock-seg">00:00:00</div>
+  </div>
+</div>
+
+<!-- ══ BOOKMARKS PANEL ══ -->
+<div class="side-panel" id="bm-panel">
+  <div class="panel-head">
+    <span class="panel-title">BOOKMARKS</span>
+    <span class="panel-close" onclick="closePanel('bm-panel')">×</span>
+  </div>
+  <div class="panel-body">
+    <input type="text" class="panel-input" id="bm-search" placeholder="Filter bookmarks..." oninput="renderBMPanel()">
+    <div id="bm-list"></div>
+  </div>
+</div>
+
+<!-- ══ HISTORY PANEL ══ -->
+<div class="side-panel" id="hist-panel">
+  <div class="panel-head">
+    <span class="panel-title">HISTORY</span>
+    <span class="panel-close" onclick="closePanel('hist-panel')">×</span>
+  </div>
+  <div class="panel-body">
+    <button class="panel-btn" onclick="clearHistory()">[ CLEAR_ALL ]</button>
+    <div id="hist-list" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<!-- ══ DOWNLOADS PANEL ══ -->
+<div class="side-panel" id="dl-panel">
+  <div class="panel-head">
+    <span class="panel-title">DOWNLOADS</span>
+    <span class="panel-close" onclick="closePanel('dl-panel')">×</span>
+  </div>
+  <div class="panel-body">
+    <div id="dl-list"><div style="font-size:9px;color:var(--text-muted);text-align:center;padding:20px;">NO_DOWNLOADS_YET</div></div>
+  </div>
+</div>
+
+<!-- ══ SETTINGS MODAL ══ -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-corner tl"></div><div class="modal-corner tr"></div>
+    <div class="modal-corner bl"></div><div class="modal-corner br"></div>
+    <div class="modal-head">
+      <span>SYSTEM_CONFIGURATION</span>
+      <span class="modal-x" onclick="closeSettings()">×</span>
+    </div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" onclick="switchSettingsTab('profile')">PROFILE</div>
+      <div class="modal-tab" onclick="switchSettingsTab('appearance')">APPEARANCE</div>
+      <div class="modal-tab" onclick="switchSettingsTab('browser')">BROWSER</div>
+      <div class="modal-tab" onclick="switchSettingsTab('shortcuts')">HOTKEYS</div>
+      <div class="modal-tab" onclick="switchSettingsTab('system')">SYSTEM</div>
+    </div>
+    <div class="modal-body">
+
+      <!-- PROFILE TAB -->
+      <div class="modal-tab-panel active" id="tab-profile">
+        <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;">
+          <img id="s-avatar-preview" src="" style="width:60px;height:60px;border:1px solid var(--main);object-fit:cover;background:#222;">
+          <div style="flex:1;">
+            <div class="field"><label>OPERATOR_NAME</label><input type="text" id="s-name" placeholder="User Alpha"></div>
+            <div class="field"><label>STATUS_TEXT</label><input type="text" id="s-status" placeholder="STATUS: ONLINE"></div>
+          </div>
+        </div>
+        <div class="field"><label>AVATAR_IMAGE</label><input type="file" class="file-inp" id="s-avatar-file" accept="image/*" onchange="previewAvatar(this)"></div>
+        <div class="field"><label>WALLPAPER_IMAGE</label><input type="file" class="file-inp" id="s-bg-file" accept="image/*" onchange="previewBg(this)"></div>
+        <div class="field"><label>WALLPAPER_URL (optional override)</label><input type="text" id="s-bg-url" placeholder="https://..." oninput="previewBgUrl(this.value)"></div>
+      </div>
+
+      <!-- APPEARANCE TAB -->
+      <div class="modal-tab-panel" id="tab-appearance">
+        <div class="field">
+          <label>ACCENT_COLOR</label>
+          <div class="color-grid" id="color-grid">
+            <div class="color-swatch selected" style="background:#ffcc00;" data-color="#ffcc00" onclick="selectColor(this,'#ffcc00')"></div>
+            <div class="color-swatch" style="background:#00ffcc;" data-color="#00ffcc" onclick="selectColor(this,'#00ffcc')"></div>
+            <div class="color-swatch" style="background:#ff4488;" data-color="#ff4488" onclick="selectColor(this,'#ff4488')"></div>
+            <div class="color-swatch" style="background:#44aaff;" data-color="#44aaff" onclick="selectColor(this,'#44aaff')"></div>
+            <div class="color-swatch" style="background:#ff6600;" data-color="#ff6600" onclick="selectColor(this,'#ff6600')"></div>
+            <div class="color-swatch" style="background:#aaffaa;" data-color="#aaffaa" onclick="selectColor(this,'#aaffaa')"></div>
+            <div class="color-swatch" style="background:#cc44ff;" data-color="#cc44ff" onclick="selectColor(this,'#cc44ff')"></div>
+            <div class="color-swatch" style="background:#ff2222;" data-color="#ff2222" onclick="selectColor(this,'#ff2222')"></div>
+            <div class="color-swatch" style="background:#ffffff;" data-color="#ffffff" onclick="selectColor(this,'#ffffff')"></div>
+            <div class="color-swatch" style="background:#888888;" data-color="#888888" onclick="selectColor(this,'#888888')"></div>
+            <div class="color-swatch" style="background:#ffaa00;" data-color="#ffaa00" onclick="selectColor(this,'#ffaa00')"></div>
+            <div class="color-swatch" style="background:#00aaff;" data-color="#00aaff" onclick="selectColor(this,'#00aaff')"></div>
+          </div>
+          <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+            <label style="font-size:9px;letter-spacing:2px;color:var(--text-muted);">CUSTOM_HEX</label>
+            <input type="text" id="s-custom-color" style="width:110px;background:#000;border:1px solid var(--main-border);color:var(--main);font-family:var(--font);padding:5px 8px;font-size:11px;outline:none;" placeholder="#rrggbb" oninput="applyCustomColor(this.value)">
+            <div id="color-preview" style="width:24px;height:24px;border:1px solid var(--main-border);"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>FONT_FAMILY</label>
+          <select id="s-font">
+            <option value="'Courier New', monospace">'Courier New' (Default)</option>
+            <option value="'Lucida Console', monospace">'Lucida Console'</option>
+            <option value="'Share Tech Mono', monospace">'Share Tech Mono'</option>
+            <option value="monospace">System Monospace</option>
+            <option value="'Segoe UI', sans-serif">Segoe UI</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>SCANLINE_EFFECT</label>
+          <select id="s-scanlines">
+            <option value="0">DISABLED</option>
+            <option value="1">ENABLED</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>WALLPAPER</label>
+          <select id="s-wp-enabled" onchange="previewWallpaper()">
+            <option value="1">ENABLED</option>
+            <option value="0">DISABLED</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>BACKGROUND_DIM (0–100)</label>
+          <input type="range" id="s-dim" min="0" max="100" value="45" style="width:100%;" oninput="document.getElementById('dim-val').innerText=this.value+'%';previewWallpaper()">
+          <span id="dim-val" style="font-size:9px;color:var(--text-muted);">45%</span>
+        </div>
+      </div>
+
+      <!-- BROWSER TAB -->
+      <div class="modal-tab-panel" id="tab-browser">
+        <div class="field"><label>HOME_PAGE</label><input type="text" id="s-home" placeholder="about:newtab"></div>
+        <div class="field"><label>PROXY_SERVER (run: node server.js)</label><input type="text" id="s-server" placeholder="http://localhost:3000"></div>
+        <div class="field"><label>SEARCH_ENGINE</label>
+          <select id="s-engine">
+            <option value="archive://search?q=">ARCHIVE_SEARCH (Built-in)</option>
+            <option value="https://www.google.com/search?q=">Google</option>
+            <option value="https://www.bing.com/search?q=">Bing</option>
+            <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
+            <option value="https://search.yahoo.com/search?p=">Yahoo</option>
+          </select>
+        </div>
+        <div class="field"><label>NEW_TAB_BEHAVIOR</label>
+          <select id="s-newtab">
+            <option value="newtab">Dashboard (Default)</option>
+            <option value="home">Home Page</option>
+            <option value="blank">Blank</option>
+          </select>
+        </div>
+        <div class="field"><label>CLOCK_FORMAT</label>
+          <select id="s-clock">
+            <option value="24">24-Hour</option>
+            <option value="12">12-Hour (AM/PM)</option>
+          </select>
+        </div>
+        <div class="field"><label>MAX_HISTORY_ITEMS</label>
+          <input type="number" id="s-max-hist" placeholder="100" min="10" max="1000" value="100">
+        </div>
+      </div>
+
+      <!-- SHORTCUTS TAB -->
+      <div class="modal-tab-panel" id="tab-shortcuts">
+        <div style="font-size:9px;letter-spacing:2px;color:var(--text-muted);margin-bottom:12px;">KEYBOARD_SHORTCUTS</div>
+        <div class="shortcut-row"><span>New Tab</span><span class="shortcut-key">Ctrl + T</span></div>
+        <div class="shortcut-row"><span>Close Tab</span><span class="shortcut-key">Ctrl + W</span></div>
+        <div class="shortcut-row"><span>Next Tab</span><span class="shortcut-key">Ctrl + Tab</span></div>
+        <div class="shortcut-row"><span>Address Bar</span><span class="shortcut-key">Ctrl + L</span></div>
+        <div class="shortcut-row"><span>Bookmark</span><span class="shortcut-key">Ctrl + D</span></div>
+        <div class="shortcut-row"><span>Settings</span><span class="shortcut-key">Ctrl + ,</span></div>
+        <div class="shortcut-row"><span>History</span><span class="shortcut-key">Ctrl + H</span></div>
+        <div class="shortcut-row"><span>Bookmarks</span><span class="shortcut-key">Ctrl + B</span></div>
+        <div class="shortcut-row"><span>Downloads</span><span class="shortcut-key">Ctrl + J</span></div>
+        <div class="shortcut-row"><span>Reload</span><span class="shortcut-key">Ctrl + R</span></div>
+        <div class="shortcut-row"><span>Go Back</span><span class="shortcut-key">Alt + ←</span></div>
+        <div class="shortcut-row"><span>Go Forward</span><span class="shortcut-key">Alt + →</span></div>
+        <div class="shortcut-row"><span>Find in Page</span><span class="shortcut-key">Ctrl + F</span></div>
+      </div>
+
+      <!-- SYSTEM TAB -->
+      <div class="modal-tab-panel" id="tab-system">
+        <div class="field"><label>LOCAL_DISK_USAGE</label>
+          <div class="disk-bar-wrap"><div class="disk-bar-fill" id="s-disk-fill" style="width:0%"></div></div>
+          <div id="s-disk-label" style="font-size:8px;color:var(--text-muted);margin-top:4px;">0KB / 5120KB</div>
+        </div>
+        <div class="field"><label>SESSION_USER</label><div id="s-session-label" style="font-size:11px;">GUEST</div></div>
+        <div class="field"><label>PROXY_STATUS</label><div id="s-proxy-state" style="font-size:11px;">CHECKING...</div></div>
+        <button class="panel-btn" onclick="exportSettings()">[ EXPORT_CONFIG ]</button>
+        <button class="panel-btn" onclick="importSettings()">[ IMPORT_CONFIG ]</button>
+        <button class="panel-btn" style="color:var(--red);border-color:rgba(255,68,68,0.3);" onclick="clearAllData()">[ WIPE_ALL_DATA ]</button>
+        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="doImport(this)">
+        <div style="margin-top:16px;font-size:8px;letter-spacing:1px;color:var(--text-muted);line-height:1.8;">
+          ARCHIVE_OS v3.0.0<br>
+          BUILD: 20250415<br>
+          ENGINE: CHROMIUM_FORK<br>
+          SECURITY: AES-256
+        </div>
+      </div>
+
+      <div class="modal-status" id="s-status-msg"></div>
+      <button class="save-btn" onclick="saveSettings()">[ COMMIT_TO_DISK ]</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VIDEO PLAYER ══ -->
+<div class="modal-overlay" id="player-modal">
+  <div class="modal" style="width:860px;">
+    <div class="modal-corner tl"></div><div class="modal-corner tr"></div>
+    <div class="modal-corner bl"></div><div class="modal-corner br"></div>
+    <div class="modal-head"><span>VIDEO_PLAYER</span><span class="modal-x" onclick="closePlayer()">×</span></div>
+    <div style="aspect-ratio:16/9;background:#000;">
+      <iframe id="player-frame" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen style="position:static;display:block;width:100%;height:100%;border:none;"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONTEXT MENU ══ -->
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" id="ctx-bm">☆ Bookmark This</div>
+  <div class="ctx-item" id="ctx-newtab">+ Open in New Tab</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" id="ctx-reload">↺ Reload</div>
+  <div class="ctx-item" id="ctx-copy-url">⧉ Copy URL</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" id="ctx-hist">⏱ View History</div>
+  <div class="ctx-item" id="ctx-settings">⚙ Settings</div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════
+const SK = 'ARCHIVE_OS_v3';
+const ENGINE_ARCHIVE = 'archive://search?q=';
+let state = {
+  user: 'GUEST',
+  settings: {
+    v: 2,
+    name: 'OPERATOR',
+    status: 'STATUS: ONLINE',
+    avatar: '',
+    bg: '',
+    bgUrl: '',
+    wallpaperEnabled: true,
+    server: 'http://localhost:3000',
+    accentColor: '#ffcc00',
+    font: "'Courier New', monospace",
+    scanlines: 0,
+    dim: 45,
+    home: 'about:newtab',
+    engine: ENGINE_ARCHIVE,
+    newTabBehavior: 'newtab',
+    clockFormat: '24',
+    maxHistory: 100
+  },
+  bookmarks: [
+    {id:'bm1', title:'Archive', url:'archive://search', icon:'A'},
+    {id:'bm2', title:'YouTube', url:'https://www.youtube.com', icon:'Y'},
+    {id:'bm3', title:'GitHub', url:'https://www.github.com', icon:'GH'},
+    {id:'bm4', title:'Reddit', url:'https://www.reddit.com', icon:'R'},
+    {id:'bm5', title:'Wikipedia', url:'https://www.wikipedia.org', icon:'W'},
+    {id:'bm6', title:'Hacker News', url:'https://news.ycombinator.com', icon:'HN'},
+  ],
+  history: [],
+  downloads: []
+};
+
+let tabs = [];
+let activeTabId = null;
+let tabCount = 0;
+
+// ════════════════════════════════════════════
+//  PERSIST
+// ════════════════════════════════════════════
+function loadState() {
+  try {
+    const raw = localStorage.getItem(SK);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      const ss = saved.settings || {};
+      const migrate = ss.v !== 2;
+      state.settings = Object.assign(state.settings, ss);
+      if (migrate) { state.settings.dim = 45; state.settings.engine = ENGINE_ARCHIVE; }
+      state.settings.v = 2;
+      if (saved.bookmarks) state.bookmarks = saved.bookmarks;
+      if (saved.history) state.history = saved.history;
+      if (saved.downloads) state.downloads = saved.downloads;
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(SK, JSON.stringify({
+      settings: state.settings,
+      bookmarks: state.bookmarks,
+      history: state.history.slice(0, state.settings.maxHistory || 100),
+      downloads: state.downloads.slice(0, 50)
+    }));
+    return true;
+  } catch(e) { showToast('DISK_WRITE_ERROR'); return false; }
+}
+
+function calcDisk() {
+  let total = 0;
+  for (let k in localStorage) {
+    if (localStorage.hasOwnProperty(k)) total += (localStorage[k].length + k.length) * 2;
+  }
+  return (total / 1024).toFixed(1);
+}
+
+// ════════════════════════════════════════════
+//  LOGIN
+// ════════════════════════════════════════════
+function doLogin() {
+  const user = document.getElementById('li-user').value.trim();
+  const pass = document.getElementById('li-pass').value;
+  const err = document.getElementById('login-error');
+  
+  if (!user) { err.innerText = 'ERROR: OPERATOR_ID_REQUIRED'; return; }
+  if (!pass) { err.innerText = 'ERROR: ACCESS_KEY_REQUIRED'; return; }
+  
+  // Simple auth (expand as needed)
+  if (pass.length < 4) { err.innerText = 'ERROR: ACCESS_DENIED // KEY_TOO_SHORT'; return; }
+  
+  state.user = user.toUpperCase();
+  if (document.getElementById('li-remember').checked) {
+    localStorage.setItem('ARCHIVE_SESSION', state.user);
+  }
+  bootBrowser();
+}
+
+function doGuestLogin() {
+  state.user = 'GUEST';
+  bootBrowser();
+}
+
+function bootBrowser() {
+  loadState();
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('browser').style.display = 'flex';
+  applySettings();
+  newTab();
+  startClock();
+  updateStatusBar();
+  checkRememberedSession();
+}
+
+function checkRememberedSession() {
+  const s = localStorage.getItem('ARCHIVE_SESSION');
+  if (s && state.user === 'GUEST') state.user = s;
+  document.getElementById('nt-session').innerText = state.user;
+}
+
+// ════════════════════════════════════════════
+//  WALLPAPER
+// ════════════════════════════════════════════
+function applyWallpaper() {
+  const s = state.settings;
+  const wp = document.getElementById('wallpaper');
+  const dim = document.getElementById('wp-dim');
+  const src = s.bgUrl || s.bg;
+  const on = s.wallpaperEnabled !== false && !!src;
+  wp.style.backgroundImage = on ? 'url("' + String(src).replace(/"/g, '%22') + '")' : '';
+  wp.classList.toggle('on', on);
+  document.body.classList.toggle('has-wp', on);
+  dim.style.opacity = (Math.max(0, Math.min(100, s.dim == null ? 45 : s.dim)) / 100);
+}
+
+function previewWallpaper() {
+  state.settings.wallpaperEnabled = document.getElementById('s-wp-enabled').value === '1';
+  state.settings.dim = parseInt(document.getElementById('s-dim').value);
+  applyWallpaper();
+  refreshInternalFrames();
+}
+
+async function previewBg(inp) {
+  const f = inp.files[0];
+  if (!f) return;
+  try {
+    state.settings.bg = await compressImage(f, 1920);
+    state.settings.wallpaperEnabled = true;
+    document.getElementById('s-wp-enabled').value = '1';
+    applyWallpaper();
+    showToast('WALLPAPER_PREVIEW // COMMIT_TO_SAVE');
+  } catch(e) { showToast('WALLPAPER_LOAD_ERROR'); }
+}
+
+function previewBgUrl(v) {
+  state.settings.bgUrl = v.trim();
+  if (state.settings.bgUrl) {
+    state.settings.wallpaperEnabled = true;
+    document.getElementById('s-wp-enabled').value = '1';
+  }
+  applyWallpaper();
+}
+
+function compressImage(file, max) {
+  return new Promise((res, rej) => {
+    if (/gif|svg/.test(file.type)) { toBase64(file).then(res, rej); return; }
+    const img = new Image();
+    const u = URL.createObjectURL(file);
+    img.onload = () => {
+      const r = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.width * r));
+      c.height = Math.max(1, Math.round(img.height * r));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(u);
+      res(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); rej(new Error('IMAGE_DECODE_FAILED')); };
+    img.src = u;
+  });
+}
+
+// ════════════════════════════════════════════
+//  APPLY SETTINGS / THEMING
+// ════════════════════════════════════════════
+function applySettings() {
+  const s = state.settings;
+  document.documentElement.style.setProperty('--main', s.accentColor);
+  
+  // Recalc dependents
+  const hex = s.accentColor;
+  document.documentElement.style.setProperty('--main-dim', hexToRgba(hex, 0.15));
+  document.documentElement.style.setProperty('--main-border', hexToRgba(hex, 0.35));
+  document.documentElement.style.setProperty('--text-muted', hexToRgba(hex, 0.5));
+  
+  document.body.style.fontFamily = s.font;
+  
+  applyWallpaper();
+
+  // Scanlines
+  let sl = document.getElementById('scanline-overlay');
+  if (s.scanlines == 1) {
+    if (!sl) {
+      sl = document.createElement('div');
+      sl.id = 'scanline-overlay';
+      sl.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9000;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);';
+      document.body.appendChild(sl);
+    }
+  } else if (sl) sl.remove();
+
+  // Avatar
+  if (s.avatar) document.getElementById('s-avatar-preview').src = s.avatar;
+
+  // Populate settings form
+  document.getElementById('s-name').value = s.name || '';
+  document.getElementById('s-status').value = s.status || '';
+  document.getElementById('s-bg-url').value = s.bgUrl || '';
+  document.getElementById('s-home').value = s.home || 'about:newtab';
+  document.getElementById('s-server').value = s.server || 'http://localhost:3000';
+  document.getElementById('s-engine').value = s.engine || ENGINE_ARCHIVE;
+  document.getElementById('s-newtab').value = s.newTabBehavior || 'newtab';
+  document.getElementById('s-clock').value = s.clockFormat || '24';
+  document.getElementById('s-max-hist').value = s.maxHistory || 100;
+  document.getElementById('s-font').value = s.font;
+  document.getElementById('s-scanlines').value = s.scanlines;
+  document.getElementById('s-wp-enabled').value = s.wallpaperEnabled === false ? '0' : '1';
+  document.getElementById('s-dim').value = s.dim;
+  document.getElementById('dim-val').innerText = s.dim + '%';
+  document.getElementById('s-session-label').innerText = state.user;
+  document.getElementById('nt-session').innerText = state.user;
+
+  // Mark selected color swatch
+  document.querySelectorAll('.color-swatch').forEach(sw => {
+    sw.classList.toggle('selected', sw.dataset.color === s.accentColor);
+  });
+  document.getElementById('s-custom-color').value = s.accentColor;
+  document.getElementById('color-preview').style.background = s.accentColor;
+  updateDiskDisplay();
+  renderNewTabPage();
+  renderBMPanel();
+  renderHistPanel();
+  renderDLPanel();
+}
+
+function hexToRgba(hex, alpha) {
+  let r=255,g=204,b=0;
+  try {
+    hex = hex.replace('#','');
+    if (hex.length===3) hex=hex.split('').map(c=>c+c).join('');
+    r=parseInt(hex.slice(0,2),16);
+    g=parseInt(hex.slice(2,4),16);
+    b=parseInt(hex.slice(4,6),16);
+  } catch(e){}
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ════════════════════════════════════════════
+//  SAVE SETTINGS
+// ════════════════════════════════════════════
+async function saveSettings() {
+  const msg = document.getElementById('s-status-msg');
+  msg.style.color = '';
+  msg.innerText = 'PROCESSING...';
+  
+  const s = state.settings;
+  s.name = document.getElementById('s-name').value || s.name;
+  s.status = document.getElementById('s-status').value || s.status;
+  s.bgUrl = document.getElementById('s-bg-url').value.trim();
+  s.home = document.getElementById('s-home').value || 'about:newtab';
+  s.server = (document.getElementById('s-server').value.trim() || 'http://localhost:3000').replace(/\/+$/, '');
+  s.engine = document.getElementById('s-engine').value;
+  s.newTabBehavior = document.getElementById('s-newtab').value;
+  s.clockFormat = document.getElementById('s-clock').value;
+  s.maxHistory = parseInt(document.getElementById('s-max-hist').value) || 100;
+  s.font = document.getElementById('s-font').value;
+  s.scanlines = parseInt(document.getElementById('s-scanlines').value);
+  s.dim = parseInt(document.getElementById('s-dim').value);
+  s.wallpaperEnabled = document.getElementById('s-wp-enabled').value === '1';
+
+  const avFile = document.getElementById('s-avatar-file').files[0];
+  const bgFile = document.getElementById('s-bg-file').files[0];
+  
+  try {
+    if (avFile) { msg.innerText = 'ENCODING_AVATAR...'; s.avatar = await compressImage(avFile, 256); }
+    if (bgFile) { msg.innerText = 'ENCODING_WALLPAPER...'; s.bg = await compressImage(bgFile, 1920); }
+    msg.innerText = 'WRITING_TO_DISK...';
+    if (!saveState()) throw new Error('DISK_FULL // USE_SMALLER_WALLPAPER');
+    document.getElementById('s-avatar-file').value = '';
+    document.getElementById('s-bg-file').value = '';
+    applySettings();
+    await detectProxy();
+    refreshInternalFrames();
+    msg.style.color = 'var(--green)';
+    msg.innerText = 'SUCCESS // SETTINGS_COMMITTED';
+    setTimeout(()=>{ if (msg.innerText.startsWith('SUCCESS')) msg.innerText = ''; }, 2500);
+  } catch(e) {
+    msg.style.color = 'var(--red)';
+    msg.innerText = 'ERROR: ' + e.message;
+  }
+}
+
+const toBase64 = f => new Promise((res,rej) => {
+  const r = new FileReader();
+  r.readAsDataURL(f);
+  r.onload = () => res(r.result);
+  r.onerror = rej;
+});
+
+function previewAvatar(inp) {
+  if (inp.files[0]) {
+    const url = URL.createObjectURL(inp.files[0]);
+    document.getElementById('s-avatar-preview').src = url;
+  }
+}
+
+function selectColor(el, color) {
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+  state.settings.accentColor = color;
+  document.getElementById('s-custom-color').value = color;
+  document.getElementById('color-preview').style.background = color;
+  document.documentElement.style.setProperty('--main', color);
+  document.documentElement.style.setProperty('--main-dim', hexToRgba(color,0.15));
+  document.documentElement.style.setProperty('--main-border', hexToRgba(color,0.35));
+  document.documentElement.style.setProperty('--text-muted', hexToRgba(color,0.5));
+}
+
+function applyCustomColor(val) {
+  if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+    document.getElementById('color-preview').style.background = val;
+    document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+    state.settings.accentColor = val;
+    document.documentElement.style.setProperty('--main', val);
+    document.documentElement.style.setProperty('--main-dim', hexToRgba(val,0.15));
+    document.documentElement.style.setProperty('--main-border', hexToRgba(val,0.35));
+    document.documentElement.style.setProperty('--text-muted', hexToRgba(val,0.5));
+  }
+}
+
+function updateDiskDisplay() {
+  const kb = parseFloat(calcDisk());
+  const pct = Math.min((kb/5120)*100, 100).toFixed(1);
+  document.getElementById('s-disk-fill').style.width = pct + '%';
+  document.getElementById('s-disk-label').innerText = `${kb}KB / 5120KB [${pct}%]`;
+}
+
+// ════════════════════════════════════════════
+//  SETTINGS MODAL
+// ════════════════════════════════════════════
+function openSettings() {
+  updateDiskDisplay();
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+  document.getElementById('s-status-msg').innerText = '';
+}
+function switchSettingsTab(name) {
+  document.querySelectorAll('.modal-tab').forEach((t,i) => {
+    const names = ['profile','appearance','browser','shortcuts','system'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.modal-tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+function exportSettings() {
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'archive_os_config.json';
+  a.click();
+  showToast('CONFIG_EXPORTED');
+}
+function importSettings() { document.getElementById('import-file').click(); }
+function doImport(inp) {
+  const f = inp.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (imported.settings) { state.settings = Object.assign(state.settings, imported.settings); }
+      if (imported.bookmarks) state.bookmarks = imported.bookmarks;
+      saveState();
+      showToast('CONFIG_IMPORTED // RELOADING');
+      setTimeout(()=>location.reload(), 800);
+    } catch(err) { showToast('IMPORT_ERROR: INVALID_FILE'); }
+  };
+  r.readAsText(f);
+}
+function clearAllData() {
+  if (confirm('WIPE ALL LOCAL DATA? This cannot be undone.')) {
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+// ════════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════════
+function hostLabel(url, n) {
+  if (String(url).startsWith('archive://')) return 'ARCHIVE_SEARCH';
+  return String(url).replace(/https?:\/\/(www\.)?/,'').split('/')[0].toUpperCase().slice(0, n || 18);
+}
+
+function getFrame(tab) {
+  let f = document.getElementById('iframe_' + tab.id);
+  if (!f) {
+    f = document.createElement('iframe');
+    f.id = 'iframe_' + tab.id;
+    f.setAttribute('allow', 'fullscreen; autoplay; clipboard-write; encrypted-media; picture-in-picture');
+    f.setAttribute('allowfullscreen', '');
+    f.onload = () => { tab.loading = false; tab.fresh = !!tab.uiNav; tab.uiNav = false; renderTabBar(); updateStatusBar(); };
+    document.getElementById('iframe-wrap').appendChild(f);
+  }
+  return f;
+}
+
+function switchTab(id) {
+  activeTabId = id;
+  const tab = tabs.find(t=>t.id===id);
+  if (!tab) return;
+  
+  document.querySelectorAll('#iframe-wrap iframe').forEach(f => f.classList.remove('active'));
+  const nt = document.getElementById('newtab');
+  
+  if (tab.url === 'about:newtab') {
+    nt.classList.add('show');
+    renderNewTabPage();
+  } else {
+    nt.classList.remove('show');
+    const iframe = document.getElementById('iframe_' + id);
+    if (iframe) iframe.classList.add('active');
+  }
+  
+  syncToolbar(tab);
+  renderTabBar();
+  updateStatusBar();
+}
+
+function syncToolbar(tab) {
+  document.getElementById('url-bar').value = tab.url === 'about:newtab' ? '' : tab.url;
+  document.getElementById('btn-back').disabled = tab.hIdx <= 0;
+  document.getElementById('btn-fwd').disabled = tab.hIdx >= tab.history.length - 1;
+}
+
+function closeTab(e, id) {
+  e.stopPropagation();
+  if (tabs.length === 1) { newTab(); }
+  
+  const idx = tabs.findIndex(t=>t.id===id);
+  tabs.splice(idx, 1);
+  const iframe = document.getElementById('iframe_' + id);
+  if (iframe) iframe.remove();
+  
+  if (activeTabId === id) {
+    const ni = Math.max(0, idx-1);
+    if (tabs[ni]) switchTab(tabs[ni].id);
+  } else renderTabBar();
+  
+  updateStatusBar();
+}
+
+function renderTabBar() {
+  const bar = document.getElementById('tab-bar');
+  const newBtn = bar.querySelector('.tab-new');
+  bar.innerHTML = '';
+  bar.appendChild(newBtn);
+  
+  tabs.forEach(tab => {
+    const d = document.createElement('div');
+    d.className = 'tab' + (tab.id === activeTabId ? ' active' : '');
+    d.onclick = () => switchTab(tab.id);
+    
+    let label = tab.url === 'about:newtab' ? 'NEW_TAB' : (tab.title || hostLabel(tab.url, 16)) || 'NEW_TAB';
+    
+    // Favicon SVG
+    const fav = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    fav.setAttribute('viewBox','0 0 10 10');
+    fav.setAttribute('width','10');
+    fav.setAttribute('height','10');
+    fav.innerHTML = `<rect width="10" height="10" fill="var(--main)" opacity=".4"/><text x="5" y="7.5" text-anchor="middle" font-size="7" fill="var(--main)" font-family="monospace">${escHtml(label[0]||'?')}</text>`;
+    
+    const titleEl = document.createElement('span');
+    titleEl.className = 'tab-title';
+    titleEl.innerText = (tab.loading ? '… ' : '') + label;
+    
+    const closeEl = document.createElement('span');
+    closeEl.className = 'tab-close';
+    closeEl.innerHTML = '×';
+    closeEl.onclick = (e) => closeTab(e, tab.id);
+    
+    d.appendChild(fav);
+    d.appendChild(titleEl);
+    d.appendChild(closeEl);
+    bar.insertBefore(d, newBtn);
+  });
+}
+
+// ════════════════════════════════════════════
+//  PAGE ENGINE  (proxy fetch + sandboxed render)
+// ════════════════════════════════════════════
+const PROXIES = [
+  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
+  u => 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(u),
+  u => 'https://thingproxy.freeboard.io/fetch/' + u
+];
+let proxyPref = 0;
+
+async function proxyFetch(url, timeout) {
+  timeout = timeout || 10000;
+  const order = PROXIES.map((_, i) => i).sort((a, b) => (a === proxyPref ? -1 : b === proxyPref ? 1 : a - b));
+  let lastErr = 'NO_PROXY_RESPONDED';
+  for (const i of order) {
+    const ctl = new AbortController();
+    const tm = setTimeout(() => ctl.abort(), timeout);
+    try {
+      const r = await fetch(PROXIES[i](url), { signal: ctl.signal });
+      clearTimeout(tm);
+      if (r.ok) { proxyPref = i; return r; }
+      lastErr = 'HTTP_' + r.status;
+    } catch (e) {
+      clearTimeout(tm);
+      lastErr = e.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK_BLOCKED';
+    }
+  }
+  throw new Error(lastErr + ' // ALL_PROXIES_FAILED');
+}
+async function proxyText(url, t) { const r = await proxyFetch(url, t); return r.text(); }
+
+// Runs INSIDE every page (injected). Handles links, forms, popups, storage shims.
+function pageAgent() {
+  var P = function(m) { try { parent.postMessage(m, '*'); } catch (e) {} };
+  function shim(name) {
+    try { var t = window[name]; t.getItem('x'); }
+    catch (e) {
+      var m = {};
+      var s = {
+        getItem: function(k) { return k in m ? m[k] : null; },
+        setItem: function(k, v) { m[k] = String(v); },
+        removeItem: function(k) { delete m[k]; },
+        clear: function() { m = {}; },
+        key: function(i) { return Object.keys(m)[i] || null; }
+      };
+      Object.defineProperty(s, 'length', { get: function() { return Object.keys(m).length; } });
+      try { Object.defineProperty(window, name, { value: s, configurable: true }); } catch (_) {}
+    }
+  }
+  shim('localStorage'); shim('sessionStorage');
+  try { void document.cookie; }
+  catch (e) {
+    var ck = '';
+    try { Object.defineProperty(document, 'cookie', { get: function() { return ck; }, set: function(v) { ck = String(v).split(';')[0]; }, configurable: true }); } catch (_) {}
+  }
+  document.addEventListener('click', function(e) {
+    if (e.defaultPrevented) return;
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a) return;
+    var raw = a.getAttribute('href') || '';
+    if (/^\s*javascript:/i.test(raw)) return;
+    if (a.hasAttribute('data-real')) return;
+    if (raw.charAt(0) === '#') {
+      e.preventDefault();
+      var id = raw.slice(1);
+      try { id = decodeURIComponent(id); } catch (_) {}
+      var el = id ? (document.getElementById(id) || document.getElementsByName(id)[0]) : document.body;
+      if (el && el.scrollIntoView) el.scrollIntoView();
+      return;
+    }
+    var href;
+    try { href = new URL(raw, document.baseURI).href; } catch (_) { return; }
+    if (!/^(https?|archive):/i.test(href)) return;
+    e.preventDefault();
+    if (a.hasAttribute('download')) { P({ type: 'ARCHIVE_DL', url: href, name: a.getAttribute('download') }); return; }
+    var nt = a.target === '_blank' || e.ctrlKey || e.metaKey || e.button === 1;
+    P({ type: 'ARCHIVE_NAV', url: href, newTab: nt });
+  }, false);
+  document.addEventListener('submit', function(e) {
+    if (e.defaultPrevented) return;
+    var f = e.target;
+    if (!f || f.tagName !== 'FORM') return;
+    var method = (f.getAttribute('method') || 'get').toLowerCase();
+    e.preventDefault();
+    if (method === 'get') {
+      try {
+        var u = new URL(f.getAttribute('action') || document.baseURI, document.baseURI);
+        var fd = new FormData(f);
+        u.search = '';
+        fd.forEach(function(v, k) { if (typeof v === 'string') u.searchParams.append(k, v); });
+        P({ type: 'ARCHIVE_NAV', url: u.href });
+      } catch (_) {}
+    } else {
+      P({ type: 'ARCHIVE_POST', url: f.action });
+    }
+  }, false);
+  window.open = function(u) {
+    try { if (u) P({ type: 'ARCHIVE_NAV', url: new URL(u, document.baseURI).href, newTab: true }); } catch (_) {}
+    return null;
+  };
+  try {
+    if (window.navigation && navigation.addEventListener) {
+      navigation.addEventListener('navigate', function(e) {
+        try {
+          if (e.hashChange || !e.cancelable) return;
+          var d = e.destination;
+          if (!d || d.sameDocument) return;
+          var u = d.url;
+          if (!/^(https?|archive):/i.test(u)) return;
+          e.preventDefault();
+          P({ type: 'ARCHIVE_NAV', url: u });
+        } catch (_) {}
+      });
+    }
+  } catch (_) {}
+  function T() { P({ type: 'ARCHIVE_TITLE', title: document.title || '' }); }
+  if (document.readyState === 'complete') T(); else window.addEventListener('load', T);
+}
+
+function processHtml(html, url) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('meta[http-equiv]').forEach(m => {
+    const h = (m.getAttribute('http-equiv') || '').toLowerCase();
+    if (h === 'content-security-policy' || h === 'x-frame-options' || h === 'refresh') m.remove();
+  });
+  doc.querySelectorAll('script[integrity],link[integrity]').forEach(e => e.removeAttribute('integrity'));
+  const head = doc.head;
+  let baseHref = url;
+  const old = doc.querySelector('base[href]');
+  if (old) { try { baseHref = new URL(old.getAttribute('href'), url).href; } catch (e) {} old.remove(); }
+  const agent = doc.createElement('script');
+  agent.textContent = '(' + pageAgent.toString() + ')();';
+  const ref = doc.createElement('meta');
+  ref.setAttribute('name', 'referrer'); ref.setAttribute('content', 'no-referrer');
+  const base = doc.createElement('base');
+  base.setAttribute('href', baseHref);
+  head.insertBefore(agent, head.firstChild);
+  head.insertBefore(ref, head.firstChild);
+  head.insertBefore(base, head.firstChild);
+  return { html: '<!DOCTYPE html>' + doc.documentElement.outerHTML, title: (doc.title || '').trim() };
+}
+
+async function buildExternal(url) {
+  let u;
+  try { u = new URL(url); } catch (e) { throw new Error('INVALID_URL'); }
+  if (!/^https?:$/.test(u.protocol)) throw new Error('UNSUPPORTED_PROTOCOL: ' + u.protocol);
+  const res = await proxyFetch(url, 12000);
+  const ct = (res.headers.get('content-type') || '').toLowerCase();
+
+  if (ct.startsWith('image/')) {
+    const blob = await res.blob();
+    const data = await toBase64(blob);
+    return { internal: true, title: (u.pathname.split('/').pop() || 'IMAGE').toUpperCase().slice(0, 18),
+      html: internalShell('IMAGE', '<div style="padding:20px;text-align:center"><img src="' + data + '" style="max-width:100%;max-height:90vh;border:1px solid ' + hexToRgba(state.settings.accentColor, .35) + '"></div>') };
+  }
+  const textual = ct === '' || ct.includes('html') || ct.startsWith('text/') || ct.includes('json') || ct.includes('xml') || ct.includes('javascript');
+  if (!textual) {
+    registerDownload(url, u.pathname.split('/').pop() || 'FILE');
+    throw new Error('BINARY_FILE_DETECTED // ADDED_TO_DOWNLOADS');
+  }
+  const text = await res.text();
+  const looksHtml = ct.includes('html') || /^\s*<(!doctype|html|head|body)/i.test(text);
+  if (!looksHtml) {
+    return { internal: true, title: 'TEXT',
+      html: internalShell('TEXT', '<pre style="padding:18px;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word">' + escHtml(text.slice(0, 600000)) + '</pre>') };
+  }
+  const out = processHtml(text, url);
+  return { html: out.html, title: out.title, internal: false };
+}
+
+// ════════════════════════════════════════════
+//  PROXY SERVER  (node server.js)
+// ════════════════════════════════════════════
+let proxyCfg = null;
+let lastDetect = 0;
+let legacyWarned = false;
+const SANDBOX_PROXIED = 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads allow-pointer-lock allow-presentation';
+const SANDBOX_INTERNAL = 'allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads allow-pointer-lock allow-presentation';
+
+async function detectProxy() {
+  lastDetect = Date.now();
+  const cands = [];
+  const sv = (state.settings.server || '').replace(/\/+$/, '');
+  if (sv) cands.push(sv);
+  if (/^https?:$/.test(location.protocol) && !cands.includes(location.origin)) cands.push(location.origin);
+  for (const base of cands) {
+    try {
+      const ctl = new AbortController();
+      const tm = setTimeout(() => ctl.abort(), 2500);
+      const r = await fetch(base + '/__archive/ping', { signal: ctl.signal });
+      clearTimeout(tm);
+      const j = await r.json();
+      if (j && j.ok) {
+        proxyCfg = { api: base, domain: j.domain, port: j.port, scheme: j.scheme || 'http' };
+        updateProxyLabel();
+        return true;
+      }
+    } catch (e) {}
+  }
+  proxyCfg = null;
+  updateProxyLabel();
+  return false;
+}
+
+function updateProxyLabel() {
+  const el = document.getElementById('s-proxy-state');
+  if (!el) return;
+  el.innerText = proxyCfg ? 'ONLINE // ' + proxyCfg.api : 'OFFLINE // LEGACY_MODE (run: node server.js)';
+  el.style.color = proxyCfg ? 'var(--green)' : 'var(--red)';
+}
+
+function proxyUrl(url) {
+  const u = new URL(url);
+  if (u.hostname.includes(':')) return url;
+  const sc = u.protocol === 'https:' ? 's' : 'h';
+  const label = u.hostname + (u.port ? '.p' + u.port : '') + '.' + sc;
+  const p = parseInt(proxyCfg.port, 10);
+  const suffix = proxyCfg.domain + (p && p !== 80 && p !== 443 ? ':' + p : '');
+  return proxyCfg.scheme + '://' + label + '.' + suffix + u.pathname + u.search + u.hash;
+}
+
+async function performLoad(tab) {
+  const url = tab.url;
+  const myLoad = ++tab.loadId;
+  tab.title = '';
+  const nt = document.getElementById('newtab');
+
+  if (url === 'about:newtab') {
+    if (tab.id === activeTabId) {
+      nt.classList.add('show');
+      document.querySelectorAll('#iframe-wrap iframe').forEach(f => f.classList.remove('active'));
+      renderNewTabPage();
+    }
+    tab.loading = false; renderTabBar(); updateStatusBar();
+    return;
+  }
+
+  const frame = getFrame(tab);
+  tab.loading = true;
+  tab.uiNav = true;
+  if (tab.id === activeTabId) {
+    nt.classList.remove('show');
+    document.querySelectorAll('#iframe-wrap iframe').forEach(f => f.classList.remove('active'));
+    frame.classList.add('active');
+  }
+  renderTabBar(); updateStatusBar();
+
+  const unlock = ms => setTimeout(() => {
+    if (myLoad === tab.loadId && (tab.loading || tab.uiNav)) { tab.loading = false; tab.uiNav = false; renderTabBar(); updateStatusBar(); }
+  }, ms);
+
+  // ── real websites: straight through the proxy server (fast, full JavaScript) ──
+  if (/^https?:\/\//i.test(url)) {
+    if (!proxyCfg && Date.now() - lastDetect > 6000) await detectProxy();
+    if (myLoad !== tab.loadId) return;
+    if (proxyCfg) {
+      frame.classList.remove('internal');
+      frame.setAttribute('sandbox', SANDBOX_PROXIED);
+      frame.removeAttribute('srcdoc');
+      try { frame.src = proxyUrl(url); }
+      catch (e) { frame.setAttribute('sandbox', SANDBOX_INTERNAL); frame.srcdoc = errorPage(url, 'INVALID_URL'); frame.classList.add('internal'); }
+      unlock(20000);
+      return;
+    }
+    if (!legacyWarned) { legacyWarned = true; showToast('PROXY_OFFLINE // RUN node server.js FOR FULL SITES'); }
+  }
+
+  // ── internal pages + legacy fallback (public proxies, slow & limited) ──
+  let res;
+  try {
+    if (url === 'about:blank') res = { html: '<!DOCTYPE html><html><body style="background:#0a0a0a"></body></html>', internal: true };
+    else if (url.startsWith('archive://')) res = await buildInternal(url);
+    else res = await buildExternal(url);
+  } catch (err) {
+    res = { html: errorPage(url, (err && err.message) || 'UNKNOWN_ERROR'), internal: true, title: 'ERROR' };
+  }
+  if (myLoad !== tab.loadId) return;
+
+  if (res.redirect) {
+    tab.url = res.redirect;
+    tab.history[tab.hIdx] = res.redirect;
+    if (tab.id === activeTabId) syncToolbar(tab);
+    addToHistory(res.redirect);
+    return performLoad(tab);
+  }
+
+  if (res.title) tab.title = res.title.toUpperCase().slice(0, 18);
+  frame.classList.toggle('internal', !!res.internal);
+  frame.setAttribute('sandbox', SANDBOX_INTERNAL);
+  frame.srcdoc = res.html;
+  renderTabBar();
+  unlock(8000);
+}
+
+function openPlayer(id) {
+  if (!/^[\w-]{6,15}$/.test(id)) return;
+  document.getElementById('player-frame').src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0';
+  document.getElementById('player-modal').classList.add('open');
+}
+function closePlayer() {
+  const f = document.getElementById('player-frame');
+  if (f) f.src = 'about:blank';
+  document.getElementById('player-modal').classList.remove('open');
+}
+
+function refreshInternalFrames() {
+  tabs.forEach(t => {
+    if (t.url.startsWith('archive://') || t.url === 'about:blank') performLoad(t);
+  });
+}
+
+// ════════════════════════════════════════════
+//  ARCHIVE_SEARCH  (built-in search engine)
+// ════════════════════════════════════════════
+function internalCSS() {
+  const s = state.settings, A = s.accentColor;
+  const bd = hexToRgba(A, .35), dm = hexToRgba(A, .15), mt = hexToRgba(A, .5);
+  const wp = document.body.classList.contains('has-wp');
+  return `
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{background:${wp ? 'transparent' : '#0a0a0a'};color:${A};font-family:${s.font};}
+a{color:inherit;text-decoration:none}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:#000}::-webkit-scrollbar-thumb{background:${bd}}
+.home{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:40px 20px;text-align:center}
+.tag{font-size:9px;letter-spacing:4px;color:${mt}}
+.logo{font-size:46px;letter-spacing:10px;line-height:1;text-shadow:0 0 18px ${dm}}
+.blink{animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.sbox{position:relative;display:flex;width:min(640px,100%)}
+.sbox input{flex:1;min-width:0;background:rgba(0,0,0,.8);border:1px solid ${A};color:${A};font-family:inherit;padding:14px 18px;font-size:14px;outline:none;letter-spacing:1px}
+.sbox input:focus{box-shadow:0 0 20px ${dm}}
+.sbox button{background:${A};color:#000;border:none;font-family:inherit;font-weight:bold;padding:14px 22px;cursor:pointer;font-size:12px;letter-spacing:2px}
+.sbox button:hover{background:#fff}
+.sug{position:absolute;top:100%;left:0;right:0;background:rgba(5,5,5,.98);border:1px solid ${A};border-top:none;display:none;z-index:9;text-align:left}
+.sg{padding:9px 14px;font-size:11px;letter-spacing:1px;cursor:pointer}
+.sg:hover,.sg.on{background:${dm}}
+.btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.ob{display:inline-block;background:rgba(0,0,0,.7);color:${A};border:1px solid ${bd};font-family:inherit;font-size:10px;letter-spacing:2px;padding:10px 16px;cursor:pointer;transition:.15s}
+.ob:hover{border-color:${A};background:${dm}}
+.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:640px}
+.chip{background:rgba(0,0,0,.7);border:1px solid ${bd};padding:8px 12px;font-size:9px;letter-spacing:1px;transition:.15s}
+.chip:hover{border-color:${A};background:${dm}}
+.top{display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid ${bd};background:rgba(0,0,0,.85);position:sticky;top:0;z-index:5}
+.logo-s{font-size:16px;letter-spacing:5px;white-space:nowrap}
+.wrap{max-width:1040px;margin:0 auto;padding:6px 20px 40px}
+.meta{font-size:9px;letter-spacing:2px;color:${mt};margin:16px 0 14px}
+.cols{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
+.main{flex:1 1 520px;min-width:0}
+.side{flex:0 0 300px;max-width:100%}
+.res{background:rgba(0,0,0,.7);border:1px solid ${bd};padding:14px 16px;margin-bottom:10px;transition:.15s}
+.res:hover{border-color:${A};background:${hexToRgba(A, .08)}}
+.res .u{font-size:9px;letter-spacing:1px;color:${mt};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res .t{display:block;font-size:14px;letter-spacing:1px;margin:6px 0;line-height:1.4}
+.res .t:hover{text-decoration:underline}
+.res .s{font-size:11px;line-height:1.7;color:rgba(255,255,255,.72)}
+.kp,.inst,.box{background:rgba(0,0,0,.78);border:1px solid ${A};padding:16px;margin-bottom:14px;position:relative}
+.kp img{width:100%;max-height:170px;object-fit:cover;border:1px solid ${bd};margin-bottom:10px;display:block}
+.kp .kt{font-size:15px;letter-spacing:2px;margin-bottom:8px}
+.kp .ks{font-size:11px;line-height:1.7;color:rgba(255,255,255,.75)}
+.kp .kl{display:inline-block;margin-top:10px;font-size:9px;letter-spacing:2px;border:1px solid ${bd};padding:6px 10px}
+.kp .kl:hover{border-color:${A};background:${dm}}
+.il{font-size:9px;letter-spacing:3px;color:${mt}}
+.iv{font-size:34px;letter-spacing:3px;margin:8px 0 4px;word-break:break-all}
+.is{font-size:10px;letter-spacing:1px;color:${mt}}
+.note{font-size:9px;letter-spacing:2px;color:#ff4444;margin:0 0 12px}
+.alt{font-size:9px;letter-spacing:2px;color:${mt};margin-top:22px;line-height:2.2}
+.alt a{border:1px solid ${bd};padding:4px 8px;margin-right:6px;transition:.15s}
+.alt a:hover{border-color:${A};background:${dm}}
+.head{position:sticky;top:0;z-index:5;background:rgba(0,0,0,.9)}
+.head .top{position:static;background:transparent}
+.tabs2{display:flex;padding:0 20px;border-bottom:1px solid ${bd};overflow-x:auto}
+.st{display:flex;align-items:center;gap:7px;padding:10px 16px;font-size:9px;letter-spacing:2px;color:${mt};border-bottom:2px solid transparent;white-space:nowrap;transition:.15s}
+.st:hover{color:${A}}
+.st.on{color:${A};border-bottom-color:${A}}
+.ic{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.ai{background:rgba(0,0,0,.78);border:1px solid ${A};padding:16px 18px;margin-bottom:14px;box-shadow:0 0 24px ${dm}}
+.ai .ah{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:3px;margin-bottom:4px}
+.ai .as{font-size:8px;letter-spacing:2px;color:${mt};margin-bottom:12px}
+.ai .al{font-size:12px;line-height:1.85;color:rgba(255,255,255,.85)}
+.ai ul{margin:12px 0 0 18px;font-size:11px;line-height:1.8;color:rgba(255,255,255,.75)}
+.ai li{margin-bottom:6px}
+.ai .src{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.ai .src a{border:1px solid ${bd};padding:5px 9px;font-size:9px;letter-spacing:1px;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:.15s}
+.ai .src a:hover{border-color:${A};background:${dm}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.im{background:rgba(0,0,0,.7);border:1px solid ${bd};transition:.15s}
+.im:hover{border-color:${A}}
+.im img{width:100%;height:150px;object-fit:cover;display:block;background:#000}
+.im .c{display:block;padding:7px 9px;font-size:9px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${mt}}
+.vid{display:flex;gap:14px;background:rgba(0,0,0,.7);border:1px solid ${bd};padding:10px;margin-bottom:10px;transition:.15s}
+.vid:hover{border-color:${A}}
+.vth{position:relative;flex:0 0 240px;aspect-ratio:16/9;cursor:pointer;background:#000;overflow:hidden}
+.vth img{width:100%;height:100%;object-fit:cover;display:block}
+.vth .pl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25);color:${A};transition:.15s}
+.vth:hover .pl{background:${dm}}
+.vth .pl svg{width:38px;height:38px}
+.vth .du{position:absolute;right:6px;bottom:6px;background:#000;border:1px solid ${bd};font-size:9px;padding:2px 5px;letter-spacing:1px}
+.vi{flex:1;min-width:0}
+.nw{display:flex;gap:14px}
+.nimg{flex:0 0 120px;width:120px;height:80px;object-fit:cover;border:1px solid ${bd}}
+.nb{flex:1;min-width:0}
+.vi .t{display:block;font-size:14px;letter-spacing:1px;line-height:1.4;margin-bottom:8px}
+.vi .t:hover{text-decoration:underline}
+.vi .u{font-size:9px;letter-spacing:1px;color:${mt};line-height:1.7}
+@media(max-width:560px){.vid{flex-direction:column}.vth{flex:none;width:100%}}
+.s{word-break:break-word}
+`;
+}
+
+function internalShell(title, body, withSearch) {
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>' + escHtml(title) +
+    '</title><style>' + internalCSS() + '</style><script>(' + pageAgent.toString() + ')();<\/script></head><body>' + body +
+    (withSearch ? '<script>(' + searchPageAgent.toString() + ')();<\/script>' : '') + '</body></html>';
+}
+
+// Runs INSIDE the search pages: suggestions + submit handling.
+function searchPageAgent() {
+  var inp = document.getElementById('q'), box = document.getElementById('sug'), tm, sel = -1, items = [];
+  if (!inp) return;
+  function nav(v, l) {
+    v = (v || '').trim(); if (!v) return;
+    parent.postMessage({ type: 'ARCHIVE_NAV', url: 'archive://search?q=' + encodeURIComponent(v) + (l ? '&lucky=1' : '') }, '*');
+  }
+  document.getElementById('sf').addEventListener('submit', function(e) { e.preventDefault(); nav(inp.value); });
+  var lk = document.getElementById('lucky'); if (lk) lk.addEventListener('click', function() { nav(inp.value, true); });
+  var gb = document.getElementById('gobtn'); if (gb) gb.addEventListener('click', function() { nav(inp.value); });
+  document.addEventListener('click', function(e) {
+    var v = e.target && e.target.closest ? e.target.closest('[data-yt]') : null;
+    if (v) { e.preventDefault(); parent.postMessage({ type: 'ARCHIVE_PLAY', id: v.getAttribute('data-yt') }, '*'); }
+  });
+  function hide() { box.style.display = 'none'; sel = -1; }
+  function show(list) {
+    items = list;
+    if (!list.length) { hide(); return; }
+    box.innerHTML = '';
+    list.forEach(function(t) {
+      var d = document.createElement('div');
+      d.className = 'sg'; d.textContent = t;
+      d.addEventListener('mousedown', function(e) { e.preventDefault(); inp.value = t; nav(t); });
+      box.appendChild(d);
+    });
+    box.style.display = 'block';
+  }
+  inp.addEventListener('input', function() {
+    clearTimeout(tm);
+    var v = inp.value.trim();
+    if (!v) { hide(); return; }
+    tm = setTimeout(function() {
+      fetch('https://en.wikipedia.org/w/api.php?action=opensearch&format=json&origin=*&limit=6&search=' + encodeURIComponent(v))
+        .then(function(r) { return r.json(); })
+        .then(function(j) { if (inp.value.trim() === v) show(j[1] || []); })
+        .catch(hide);
+    }, 180);
+  });
+  inp.addEventListener('keydown', function(e) {
+    var els = box.children;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (!els.length) return;
+      e.preventDefault();
+      sel = (sel + (e.key === 'ArrowDown' ? 1 : -1) + els.length) % els.length;
+      for (var i = 0; i < els.length; i++) els[i].classList.toggle('on', i === sel);
+      inp.value = items[sel];
+    } else if (e.key === 'Escape') hide();
+  });
+  inp.addEventListener('blur', function() { setTimeout(hide, 120); });
+  inp.focus();
+  try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {}
+}
+
+async function webSearch(q) {
+  const enc = encodeURIComponent(q);
+  try {
+    const html = await proxyText('https://html.duckduckgo.com/html/?q=' + enc, 8000);
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const out = [];
+    doc.querySelectorAll('.result').forEach(r => {
+      if (r.classList.contains('result--ad')) return;
+      const a = r.querySelector('a.result__a'); if (!a) return;
+      let href = a.getAttribute('href') || '';
+      const m = href.match(/[?&]uddg=([^&]+)/);
+      if (m) href = decodeURIComponent(m[1]); else if (href.startsWith('//')) href = 'https:' + href;
+      if (!/^https?:/.test(href)) return;
+      const sn = r.querySelector('.result__snippet');
+      out.push({ title: a.textContent.trim(), url: href, snippet: sn ? sn.textContent.trim() : '' });
+    });
+    if (out.length) return { results: out };
+  } catch (e) {}
+  try {
+    const html = await proxyText('https://www.mojeek.com/search?q=' + enc, 8000);
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const out = [];
+    doc.querySelectorAll('ul.results-standard li').forEach(li => {
+      const a = li.querySelector('a.title') || li.querySelector('h2 a'); if (!a) return;
+      const href = a.getAttribute('href') || '';
+      if (!/^https?:/.test(href)) return;
+      const p = li.querySelector('p.s');
+      out.push({ title: a.textContent.trim(), url: href, snippet: p ? p.textContent.trim() : '' });
+    });
+    if (out.length) return { results: out };
+  } catch (e) {}
+  return { results: [] };
+}
+
+async function wikiSearch(q) {
+  const u = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrlimit=6&prop=extracts%7Cpageimages&exintro=1&explaintext=1&exsentences=2&exlimit=max&piprop=thumbnail&pithumbsize=300&gsrsearch=' + encodeURIComponent(q);
+  const ctl = new AbortController();
+  const tm = setTimeout(() => ctl.abort(), 8000);
+  const r = await fetch(u, { signal: ctl.signal });
+  clearTimeout(tm);
+  const j = await r.json();
+  const pages = Object.values((j.query && j.query.pages) || {}).sort((a, b) => a.index - b.index);
+  return pages.map(p => ({
+    title: p.title,
+    url: 'https://en.wikipedia.org/wiki/' + encodeURIComponent(p.title.replace(/ /g, '_')),
+    extract: p.extract || '',
+    thumb: (p.thumbnail && p.thumbnail.source) || ''
+  }));
+}
+
+function instantAnswer(q) {
+  const s = q.trim();
+  if (/^[\d\s+\-*/().%^]+$/.test(s) && /\d/.test(s) && /[+\-*/%^]/.test(s)) {
+    try {
+      const v = Function('"use strict";return (' + s.replace(/\^/g, '**') + ')')();
+      if (typeof v === 'number' && isFinite(v)) return { label: 'CALCULATOR', main: String(+v.toFixed(10)), sub: s + ' =' };
+    } catch (e) {}
+  }
+  if (/^(time|current time|what time is it)$/i.test(s)) {
+    return { label: 'LOCAL_TIME', main: new Date().toLocaleTimeString(), sub: Intl.DateTimeFormat().resolvedOptions().timeZone };
+  }
+  if (/^(date|today|what day is it|what is the date)$/i.test(s)) {
+    return { label: 'TODAY', main: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase(),
+      sub: new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase() };
+  }
+  return null;
+}
+
+function searchHomeBody() {
+  const chips = ['how does a CPU work', 'history of the internet', '24*60*7', 'time', 'black hole', 'retro computing']
+    .map(c => '<a class="chip" href="archive://search?q=' + encodeURIComponent(c) + '">' + escHtml(c) + '</a>').join('');
+  return `<div class="home">
+    <div class="tag">ARCHIVE_OS // SEARCH_INDEX // v1.0</div>
+    <div class="logo">ARCHIVE<span class="blink">_</span>SEARCH</div>
+    <form id="sf" class="sbox" autocomplete="off"><input id="q" type="text" placeholder="SEARCH_THE_ARCHIVE..." value=""><button type="submit">GO</button><div class="sug" id="sug"></div></form>
+    <div class="btns"><button type="button" class="ob" id="gobtn">[ ARCHIVE_SEARCH ]</button><button type="button" class="ob" id="lucky">[ I'M_FEELING_LUCKY ]</button></div>
+    <div class="tag">QUICK_QUERIES</div>
+    <div class="chips">${chips}</div>
+    <div class="tag">INDEX: WEB // ENCYCLOPEDIA // INSTANT_ANSWERS</div>
+  </div>`;
+}
+
+const SEARCH_TABS = [['all', 'ALL'], ['ai', 'AI_OVERVIEW'], ['images', 'IMAGES'], ['videos', 'VIDEOS'], ['news', 'NEWS']];
+const IC_PATHS = {
+  all: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/>',
+  ai: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+  images: '<rect x="3" y="4" width="18" height="16" rx="1"/><circle cx="9" cy="10" r="1.5"/><path d="M21 16l-5-5-8 8"/>',
+  videos: '<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M10 9l5 3-5 3z"/>',
+  news: '<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5"/>'
+};
+function ic(name) { return '<svg class="ic" viewBox="0 0 24 24">' + (IC_PATHS[name] || '') + '</svg>'; }
+function hostOf(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } }
+function timeAgo(t) {
+  const d = Date.parse(t);
+  if (isNaN(d)) return t || '';
+  const s = Math.max(0, (Date.now() - d) / 1000);
+  if (s < 3600) return Math.max(1, Math.round(s / 60)) + 'M_AGO';
+  if (s < 86400) return Math.round(s / 3600) + 'H_AGO';
+  if (s < 2592000) return Math.round(s / 86400) + 'D_AGO';
+  return new Date(d).toLocaleDateString();
+}
+
+async function commonsImages(q) {
+  const u = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=40&prop=imageinfo&iiprop=url%7Cmime&iiurlwidth=320&gsrsearch=' + encodeURIComponent(q);
+  const j = await (await fetch(u)).json();
+  return Object.values((j.query && j.query.pages) || {})
+    .filter(p => p.imageinfo && p.imageinfo[0] && /^image\//.test(p.imageinfo[0].mime))
+    .map(p => ({
+      thumb: p.imageinfo[0].thumburl || p.imageinfo[0].url,
+      full: p.imageinfo[0].url,
+      title: p.title.replace(/^File:/, '').replace(/\.\w+$/, ''),
+      url: p.imageinfo[0].descriptionurl || p.imageinfo[0].url
+    }));
+}
+
+async function legacyNews(q) {
+  const xml = await proxyText('https://www.bing.com/news/search?q=' + encodeURIComponent(q) + '&format=rss', 9000);
+  const doc = new DOMParser().parseFromString(xml, 'text/xml');
+  const tx = (el, tag) => { const n = el.getElementsByTagName(tag)[0]; return n ? n.textContent.trim() : ''; };
+  return Array.from(doc.getElementsByTagName('item')).map(it => {
+    let link = tx(it, 'link');
+    try { const real = new URL(link).searchParams.get('url'); if (real) link = real; } catch (e) {}
+    return { title: tx(it, 'title'), url: link, snippet: tx(it, 'description'), source: tx(it, 'News:Source'), time: tx(it, 'pubDate'), image: tx(it, 'News:Image') };
+  }).filter(n => /^https?:/.test(n.url));
+}
+
+// one entry point for every result type
+async function searchApi(type, q) {
+  if (proxyCfg) {
+    try {
+      const ctl = new AbortController();
+      const tm = setTimeout(() => ctl.abort(), 22000);
+      const r = await fetch(proxyCfg.api + '/__archive/search?type=' + type + '&q=' + encodeURIComponent(q), { signal: ctl.signal });
+      clearTimeout(tm);
+      const j = await r.json();
+      return j.results || [];
+    } catch (e) { return []; }
+  }
+  try {
+    if (type === 'web') { const w = await webSearch(q); return (w && w.results) || []; }
+    if (type === 'images') return await commonsImages(q);
+    if (type === 'news') return await legacyNews(q);
+  } catch (e) {}
+  return [];
+}
+
+// extractive "AI overview": stitched from the top encyclopedia entry + top web snippets (no language model)
+function makeOverview(wikiList, results) {
+  const srcs = [], bullets = [];
+  let lead = '';
+  const top = wikiList && wikiList[0];
+  if (top && top.extract) {
+    srcs.push({ title: 'Wikipedia: ' + top.title, url: top.url });
+    lead = top.extract.split(/(?<=[.!?])\s+/).slice(0, 3).join(' ') + ' [1]';
+  }
+  results.slice(0, 5).forEach(r => {
+    const sn = (r.snippet || '').trim();
+    if (sn.length < 50) return;
+    if (lead && lead.toLowerCase().includes(sn.slice(0, 40).toLowerCase())) return;
+    srcs.push({ title: r.title || hostOf(r.url), url: r.url });
+    bullets.push({ t: sn, n: srcs.length });
+  });
+  if (!lead && bullets.length) { const f = bullets.shift(); lead = f.t + ' [' + f.n + ']'; }
+  if (!lead) return null;
+  return { lead, bullets: bullets.slice(0, 4), srcs };
+}
+
+function overviewHtml(ov) {
+  if (!ov) return '';
+  return `<div class="ai"><div class="ah">${ic('ai')}<span>AI_OVERVIEW</span></div>
+    <div class="as">AUTO_SUMMARY // COMPILED FROM TOP SOURCES // NOT A LANGUAGE MODEL</div>
+    <div class="al">${escHtml(ov.lead)}</div>
+    ${ov.bullets.length ? '<ul>' + ov.bullets.map(b => '<li>' + escHtml(b.t.slice(0, 260)) + ' [' + b.n + ']</li>').join('') + '</ul>' : ''}
+    <div class="src">${ov.srcs.map((s, i) => '<a href="' + escHtml(s.url) + '">[' + (i + 1) + '] ' + escHtml(s.title.slice(0, 40)) + '</a>').join('')}</div></div>`;
+}
+
+function resCard(r) {
+  const host = hostOf(r.url);
+  return `<div class="res"><div class="u">${escHtml(host)} &rsaquo; ${escHtml(r.url.slice(0, 90))}</div>
+    <a class="t" href="${escHtml(r.url)}">${escHtml(r.title)}</a>
+    <div class="s">${escHtml((r.snippet || '').slice(0, 300))}</div></div>`;
+}
+
+async function buildSearch(q, lucky, type) {
+  type = SEARCH_TABS.some(t => t[0] === type) ? type : 'all';
+  if (!q) return { internal: true, title: 'ARCHIVE_SEARCH', html: internalShell('ARCHIVE_SEARCH', searchHomeBody(), true) };
+  const t0 = performance.now();
+  const wt = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+  let results = [], wikiList = [], items = [], note = '';
+
+  if (type === 'all' || type === 'ai') {
+    const [web, wiki] = await Promise.all([wt(searchApi('web', q), 24000), wt(wikiSearch(q).catch(() => []), 9000)]);
+    results = web || [];
+    wikiList = wiki || [];
+    if (!results.length && wikiList.length) {
+      results = wikiList.map(w => ({ title: w.title + ' - Wikipedia', url: w.url, snippet: w.extract }));
+      note = 'WEB_INDEX_UNREACHABLE // SHOWING_ENCYCLOPEDIA_MATCHES';
+    }
+    if (lucky && results[0]) return { redirect: results[0].url };
+  } else {
+    items = (await wt(searchApi(type, q), 24000)) || [];
+  }
+
+  const secs = ((performance.now() - t0) / 1000).toFixed(2);
+  const enc = encodeURIComponent(q);
+  const hint = proxyCfg ? 'NOTHING MATCHED "' + escHtml(q) + '". TRY A DIFFERENT OR MORE GENERAL QUERY.'
+    : 'START THE PROXY SERVER (node server.js) FOR FULL ' + type.toUpperCase() + ' SEARCH.';
+  const empty = `<div class="box"><div class="il">NO_RESULTS_FOUND</div><div class="s" style="margin-top:8px;line-height:1.8">${hint}</div></div>`;
+
+  const head = `<div class="head"><div class="top"><a class="logo-s" href="archive://search">ARCHIVE<span class="blink">_</span>SEARCH</a>
+    <form id="sf" class="sbox" autocomplete="off"><input id="q" type="text" value="${escHtml(q)}"><button type="submit">GO</button><div class="sug" id="sug"></div></form></div>
+    <div class="tabs2">${SEARCH_TABS.map(t => '<a class="st' + (t[0] === type ? ' on' : '') + '" href="archive://search?q=' + enc + '&t=' + t[0] + '">' + ic(t[0]) + '<span>' + t[1] + '</span></a>').join('')}</div></div>`;
+
+  let main = '', side = '', count = 0;
+
+  if (type === 'all' || type === 'ai') {
+    count = results.length;
+    const ov = makeOverview(wikiList, results);
+    const ql = q.toLowerCase();
+    const top = wikiList[0];
+    const showKP = top && (ql.includes(top.title.toLowerCase()) || top.title.toLowerCase().includes(ql) ||
+      ql.split(/\s+/).filter(w => w.length > 2).every(w => (top.title + ' ' + top.extract).toLowerCase().includes(w)));
+    const kp = showKP ? `<div class="kp">${top.thumb ? '<img src="' + escHtml(top.thumb) + '" alt="">' : ''}
+      <div class="il">ENCYCLOPEDIA</div><div class="kt">${escHtml(top.title)}</div>
+      <div class="ks">${escHtml(top.extract.slice(0, 420))}</div>
+      <a class="kl" href="${escHtml(top.url)}">[ READ_FULL_ENTRY ]</a></div>` : '';
+    const inst = instantAnswer(q);
+    const instHtml = inst ? `<div class="inst"><div class="il">${escHtml(inst.label)}</div><div class="iv">${escHtml(inst.main)}</div><div class="is">${escHtml(inst.sub)}</div></div>` : '';
+    const alt = `<div class="alt">SEARCH_ELSEWHERE: <a href="https://www.bing.com/search?q=${enc}">BING</a><a href="https://html.duckduckgo.com/html/?q=${enc}">DUCKDUCKGO</a><a href="https://www.mojeek.com/search?q=${enc}">MOJEEK</a><a href="https://en.wikipedia.org/w/index.php?search=${enc}">WIKIPEDIA</a></div>`;
+    if (type === 'ai') {
+      main = (overviewHtml(ov) || empty) + (wikiList.length > 1 ? '<div class="meta">RELATED_ENTRIES</div>' + wikiList.slice(1).map(w => resCard({ title: w.title, url: w.url, snippet: w.extract })).join('') : '');
+      side = kp;
+    } else {
+      main = overviewHtml(ov) + instHtml + (results.map(resCard).join('') || empty) + alt;
+      side = kp;
+    }
+  } else if (type === 'images') {
+    count = items.length;
+    main = items.length ? '<div class="grid">' + items.map(im =>
+      `<div class="im"><a href="${escHtml(im.full)}"><img loading="lazy" referrerpolicy="no-referrer" src="${escHtml(im.thumb)}" alt=""></a><a class="c" href="${escHtml(im.url)}">${escHtml(im.title || hostOf(im.url))}</a></div>`).join('') + '</div>' : empty;
+  } else if (type === 'videos') {
+    count = items.length;
+    main = items.length ? items.map(v => {
+      const meta = [v.channel, v.views, v.published].filter(Boolean).join(' // ');
+      return `<div class="vid"><div class="vth" data-yt="${escHtml(v.id)}"><img referrerpolicy="no-referrer" src="${escHtml(v.thumb)}" alt=""><span class="pl"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg></span>${v.duration ? '<span class="du">' + escHtml(v.duration) + '</span>' : ''}</div>
+        <div class="vi"><a class="t" href="${escHtml(v.url)}">${escHtml(v.title)}</a><div class="u" style="white-space:normal">${escHtml(meta)}</div></div></div>`;
+    }).join('') : empty;
+  } else if (type === 'news') {
+    count = items.length;
+    main = items.length ? items.map(n =>
+      `<div class="res nw">${n.image ? '<img class="nimg" referrerpolicy="no-referrer" src="' + escHtml(n.image) + '" alt="">' : ''}
+        <div class="nb"><div class="u">${escHtml(n.source || hostOf(n.url))} // ${escHtml(timeAgo(n.time))}</div>
+        <a class="t" href="${escHtml(n.url)}">${escHtml(n.title)}</a><div class="s">${escHtml((n.snippet || '').slice(0, 260))}</div></div></div>`).join('') : empty;
+  }
+
+  const body = head + `<div class="wrap">
+    <div class="meta">${type === 'ai' ? 'AI_OVERVIEW' : 'ABOUT ' + count + ' RESULTS'} // ${secs} SEC // QUERY: ${escHtml(q.toUpperCase().slice(0, 40))}</div>
+    ${note ? '<div class="note">' + escHtml(note) + '</div>' : ''}
+    <div class="cols"><div class="main">${main}</div>${side ? '<div class="side">' + side + '</div>' : ''}</div>
+  </div>`;
+
+  return { internal: true, title: q.slice(0, 18), html: internalShell(q + ' // ARCHIVE', body, true) };
+}
+
+async function buildInternal(url) {
+  const m = url.match(/^archive:\/\/([^?#]*)\??([^#]*)/);
+  const page = m ? m[1] : '';
+  const params = new URLSearchParams(m ? m[2] : '');
+  if (page === 'search') return buildSearch((params.get('q') || '').trim(), params.get('lucky') === '1', params.get('t') || 'all');
+  return buildSearch('', false, 'all');
+}
+
+function errorPage(url, msg) {
+  const real = /^https?:/i.test(url) ? `<a class="ob" href="${escHtml(url)}" target="_blank" data-real>[ OPEN_IN_REAL_TAB ]</a>` : '';
+  const body = `<div class="home">
+    <div class="tag">ERR // CONNECTION_FAILED</div>
+    <div class="logo" style="font-size:28px">PAGE_UNREACHABLE</div>
+    <div class="box" style="max-width:560px;width:100%;text-align:left"><div class="il">TARGET</div><div class="s" style="margin:6px 0 12px;font-size:11px">${escHtml(url)}</div><div class="il">REASON</div><div class="s" style="margin-top:6px;font-size:11px">${escHtml(msg)}</div></div>
+    <div class="btns"><a class="ob" href="archive://reload">[ RETRY ]</a>${real}<a class="ob" href="archive://search">[ ARCHIVE_SEARCH ]</a></div>
+    <div class="tag" style="max-width:520px;line-height:2">FIX: RUN node server.js AND OPEN http://localhost:3000 // OTHER_CAUSES: SITE_DOWN // BLOCKED // OFFLINE</div>
+  </div>`;
+  return internalShell('ERROR', body);
+}
+
+// Messages from pages (links, forms, titles)
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!d || typeof d !== 'object' || !String(d.type || '').startsWith('ARCHIVE_')) return;
+  const tab = tabs.find(t => { const f = document.getElementById('iframe_' + t.id); return f && f.contentWindow === e.source; });
+  if (!tab) return;
+  switch (d.type) {
+    case 'ARCHIVE_NAV': {
+      const url = String(d.url || '');
+      if (!/^(https?|archive):\/\//i.test(url)) return;
+      if (url === 'archive://reload') { performLoad(tab); return; }
+      if (d.newTab) { newTab(url); addToHistory(url); }
+      else loadUrl(url, tab);
+      break;
+    }
+    case 'ARCHIVE_LOC': {
+      if (tab.uiNav) return;
+      const url = String(d.url || '');
+      if (!/^https?:\/\//i.test(url)) return;
+      if (d.title) tab.title = String(d.title).toUpperCase().slice(0, 18);
+      if (url !== tab.url) {
+        if (tab.fresh) { tab.history[tab.hIdx] = url; tab.url = url; }
+        else { tab.history = tab.history.slice(0, tab.hIdx + 1); tab.history.push(url); tab.hIdx = tab.history.length - 1; tab.url = url; }
+        addToHistory(url);
+        if (tab.id === activeTabId) syncToolbar(tab);
+      }
+      tab.fresh = false;
+      renderTabBar(); updateStatusBar();
+      break;
+    }
+    case 'ARCHIVE_PLAY':
+      openPlayer(String(d.id || ''));
+      break;
+    case 'ARCHIVE_TITLE':
+      if (d.title) { tab.title = String(d.title).toUpperCase().slice(0, 18); renderTabBar(); }
+      break;
+    case 'ARCHIVE_DL':
+      if (/^https?:\/\//i.test(String(d.url || ''))) registerDownload(d.url, d.name || '');
+      break;
+    case 'ARCHIVE_POST':
+      showToast('POST_FORMS_NOT_SUPPORTED');
+      break;
+  }
+});
+
+// ════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════
+function navigate() {
+  let input = document.getElementById('url-bar').value.trim();
+  if (!input) return;
+  
+  let url;
+  if (input === 'about:newtab' || input === 'about:blank') {
+    url = input;
+  } else if (input.match(/^(https?|archive):\/\//)) {
+    url = input;
+  } else if (input.includes('.') && !input.includes(' ')) {
+    url = 'https://' + input;
+  } else {
+    url = (state.settings.engine || ENGINE_ARCHIVE) + encodeURIComponent(input);
+  }
+  
+  loadUrl(url);
+}
+
+function newTab(url) {
+  const id = 'tab_' + (tabCount++);
+  const behavior = state.settings.newTabBehavior || 'newtab';
+  let startUrl = url || (behavior === 'home' ? state.settings.home : behavior === 'blank' ? 'about:blank' : 'about:newtab');
+  
+  const tab = { id, url: startUrl, history: [startUrl], hIdx: 0, title: '', loading: false, loadId: 0, uiNav: false, fresh: false };
+  tabs.push(tab);
+  
+  renderTabBar();
+  switchTab(id);
+  if (startUrl !== 'about:newtab') performLoad(tab);
+}
+
+function loadUrl(url, tabRef) {
+  const tab = tabRef || tabs.find(t=>t.id===activeTabId);
+  if (!tab) return;
+  
+  tab.history = tab.history.slice(0, tab.hIdx + 1);
+  tab.history.push(url);
+  tab.hIdx = tab.history.length - 1;
+  tab.url = url;
+  
+  if (tab.id === activeTabId) syncToolbar(tab);
+  
+  addToHistory(url);
+  performLoad(tab);
+  updateStatusBar();
+}
+
+// Expose for start page
+window.loadUrlInActiveTab = loadUrl;
+
+function navBack() {
+  const tab = tabs.find(t=>t.id===activeTabId);
+  if (!tab || tab.hIdx <= 0) return;
+  tab.hIdx--;
+  tab.url = tab.history[tab.hIdx];
+  syncToolbar(tab);
+  performLoad(tab);
+  updateStatusBar();
+}
+
+function navFwd() {
+  const tab = tabs.find(t=>t.id===activeTabId);
+  if (!tab || tab.hIdx >= tab.history.length-1) return;
+  tab.hIdx++;
+  tab.url = tab.history[tab.hIdx];
+  syncToolbar(tab);
+  performLoad(tab);
+  updateStatusBar();
+}
+
+function navRefresh() {
+  const tab = tabs.find(t=>t.id===activeTabId);
+  if (!tab) return;
+  if (tab.url === 'about:newtab') { renderNewTabPage(); return; }
+  performLoad(tab);
+  showToast('PAGE_RELOADED');
+}
+
+function navHome() {
+  loadUrl(state.settings.home || 'about:newtab');
+}
+
+// ════════════════════════════════════════════
+//  BOOKMARKS
+// ════════════════════════════════════════════
+function bookmarkCurrent() {
+  const tab = tabs.find(t=>t.id===activeTabId);
+  if (!tab || tab.url === 'about:newtab') { showToast('NOTHING_TO_BOOKMARK'); return; }
+  const exists = state.bookmarks.find(b=>b.url===tab.url);
+  if (exists) { showToast('ALREADY_BOOKMARKED'); return; }
+  const title = tab.title || hostLabel(tab.url, 40);
+  state.bookmarks.push({
+    id: 'bm_' + Date.now(),
+    title,
+    url: tab.url,
+    icon: title[0] || '?',
+    added: new Date().toISOString()
+  });
+  saveState();
+  showToast('BOOKMARKED: ' + title.slice(0,20));
+  renderBMPanel();
+  renderNewTabPage();
+}
+
+function removeBookmark(id) {
+  state.bookmarks = state.bookmarks.filter(b=>b.id!==id);
+  saveState();
+  renderBMPanel();
+  renderNewTabPage();
+  showToast('BOOKMARK_REMOVED');
+}
+
+function renderBMPanel() {
+  const filter = (document.getElementById('bm-search')?.value || '').toLowerCase();
+  const list = document.getElementById('bm-list');
+  if (!list) return;
+  
+  const filtered = state.bookmarks.filter(b =>
+    b.title.toLowerCase().includes(filter) || b.url.toLowerCase().includes(filter)
+  );
+  
+  if (!filtered.length) {
+    list.innerHTML = '<div style="font-size:9px;color:var(--text-muted);text-align:center;padding:20px;">NO_BOOKMARKS</div>';
+    return;
+  }
+  
+  list.innerHTML = filtered.map(b => `
+    <div class="panel-item">
+      <div style="width:18px;height:18px;background:var(--main-dim);border:1px solid var(--main-border);display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;" data-url="${escHtml(b.url)}" onclick="loadUrl(this.dataset.url)">${escHtml(b.icon||b.title[0]||'?')}</div>
+      <div style="flex:1;min-width:0;" data-url="${escHtml(b.url)}" onclick="loadUrl(this.dataset.url)">
+        <div class="panel-item-title">${escHtml(b.title)}</div>
+        <div class="panel-item-url">${escHtml(b.url)}</div>
+      </div>
+      <span class="panel-item-del" data-id="${escHtml(b.id)}" onclick="removeBookmark(this.dataset.id)">×</span>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+//  HISTORY
+// ════════════════════════════════════════════
+function addToHistory(url) {
+  if (url === 'about:newtab' || url === 'about:blank') return;
+  state.history.unshift({ url, time: new Date().toISOString() });
+  if (state.history.length > (state.settings.maxHistory || 100)) {
+    state.history = state.history.slice(0, state.settings.maxHistory || 100);
+  }
+  saveState();
+  renderHistPanel();
+  updateStatusBar();
+}
+
+function clearHistory() {
+  if (confirm('Clear all history?')) {
+    state.history = [];
+    saveState();
+    renderHistPanel();
+    showToast('HISTORY_CLEARED');
+    updateStatusBar();
+  }
+}
+
+function renderHistPanel() {
+  const list = document.getElementById('hist-list');
+  if (!list) return;
+  
+  if (!state.history.length) {
+    list.innerHTML = '<div style="font-size:9px;color:var(--text-muted);text-align:center;padding:20px;">NO_HISTORY</div>';
+    return;
+  }
+  
+  // Group by date
+  const groups = {};
+  state.history.forEach(h => {
+    const d = h.time ? new Date(h.time).toLocaleDateString() : 'TODAY';
+    if (!groups[d]) groups[d] = [];
+    groups[d].push(h);
+  });
+  
+  let html = '';
+  for (const [date, items] of Object.entries(groups)) {
+    html += `<div class="panel-section">${escHtml(date)}</div>`;
+    items.slice(0,20).forEach(h => {
+      const label = hostLabel(h.url, 22);
+      html += `<div class="panel-item" data-url="${escHtml(h.url)}" onclick="loadUrl(this.dataset.url)">
+        <div style="flex:1;min-width:0;">
+          <div class="panel-item-title">${escHtml(label)}</div>
+          <div class="panel-item-url">${escHtml(h.url)}</div>
+        </div>
+      </div>`;
+    });
+  }
+  list.innerHTML = html;
+}
+
+// ════════════════════════════════════════════
+//  DOWNLOADS (tracked from link sniffer)
+// ════════════════════════════════════════════
+function registerDownload(url, name) {
+  state.downloads.unshift({ url, name: name || url.split('/').pop() || 'FILE', time: new Date().toISOString(), size: '?' });
+  saveState();
+  renderDLPanel();
+  showToast('DL_REGISTERED: ' + (name||'FILE').slice(0,20));
+}
+
+function renderDLPanel() {
+  const list = document.getElementById('dl-list');
+  if (!list) return;
+  if (!state.downloads.length) {
+    list.innerHTML = '<div style="font-size:9px;color:var(--text-muted);text-align:center;padding:20px;">NO_DOWNLOADS_YET</div>';
+    return;
+  }
+  list.innerHTML = state.downloads.map((d,i) => `
+    <div class="panel-item">
+      <div style="flex:1;min-width:0;">
+        <div class="panel-item-title">${escHtml(d.name)}</div>
+        <div class="panel-item-url">${d.time ? new Date(d.time).toLocaleString() : ''}</div>
+      </div>
+      <a href="${escHtml(d.url)}" download target="_blank" rel="noopener" style="color:var(--main);font-size:9px;letter-spacing:1px;text-decoration:none;">GET</a>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+//  PANELS
+// ════════════════════════════════════════════
+function openPanel(id) {
+  document.querySelectorAll('.side-panel').forEach(p=>p.classList.remove('open'));
+  document.getElementById(id).classList.add('open');
+  if (id === 'bm-panel') renderBMPanel();
+  if (id === 'hist-panel') renderHistPanel();
+  if (id === 'dl-panel') renderDLPanel();
+}
+function closePanel(id) { document.getElementById(id).classList.remove('open'); }
+
+// ════════════════════════════════════════════
+//  NEW TAB PAGE
+// ════════════════════════════════════════════
+function renderNewTabPage() {
+  const grid = document.getElementById('nt-bm-grid');
+  if (!grid) return;
+  grid.innerHTML = state.bookmarks.slice(0, 12).map(b => `
+    <div class="nt-bm-item" data-url="${escHtml(b.url)}" onclick="loadUrl(this.dataset.url)">
+      <div class="nt-bm-icon">${escHtml(b.icon||b.title[0])}</div>
+      <div class="nt-bm-label">${escHtml(b.title)}</div>
+    </div>
+  `).join('');
+  
+  document.getElementById('nt-tabs').innerText = tabs.length;
+  document.getElementById('nt-bm-count').innerText = state.bookmarks.length;
+  document.getElementById('nt-hist-count').innerText = state.history.length;
+  document.getElementById('nt-session').innerText = state.user || 'GUEST';
+}
+
+function ntSearch() {
+  const q = document.getElementById('nt-search').value.trim();
+  if (!q) return;
+  const url = q.match(/^(https?|archive):\/\//) ? q :
+               (q.includes('.') && !q.includes(' ')) ? 'https://'+q :
+               (state.settings.engine || ENGINE_ARCHIVE) + encodeURIComponent(q);
+  loadUrl(url);
+}
+
+// ════════════════════════════════════════════
+//  CLOCK
+// ════════════════════════════════════════════
+function startClock() {
+  function tick() {
+    const now = new Date();
+    let h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+    let suffix = '';
+    if (state.settings.clockFormat === '12') {
+      suffix = h >= 12 ? ' PM' : ' AM';
+      h = h % 12 || 12;
+    }
+    const pad = n => String(n).padStart(2,'0');
+    const time = `${pad(h)}:${pad(m)}:${pad(s)}${suffix}`;
+    const dateStr = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).toUpperCase();
+    const el = document.getElementById('nt-clock');
+    const de = document.getElementById('nt-date');
+    const se = document.getElementById('st-clock-seg');
+    if (el) el.innerText = time;
+    if (de) de.innerText = dateStr;
+    if (se) se.innerText = time;
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+// ════════════════════════════════════════════
+//  STATUS BAR
+// ════════════════════════════════════════════
+function updateStatusBar() {
+  const tab = tabs.find(t=>t.id===activeTabId);
+  const urlSeg = document.getElementById('st-url-seg');
+  const tabsSeg = document.getElementById('st-tabs-seg');
+  const memSeg = document.getElementById('st-mem-seg');
+  const dot = document.getElementById('st-dot');
+  const st = document.getElementById('st-status');
+  const loading = !!(tab && tab.loading);
+  if (dot) dot.className = 'status-dot ' + (loading ? 'dot-yellow' : 'dot-green');
+  if (st) st.innerText = loading ? 'LOADING...' : 'CONNECTED';
+  if (urlSeg) urlSeg.innerText = (tab?.url || 'about:newtab').slice(0, 60);
+  if (tabsSeg) tabsSeg.innerText = 'TABS: ' + tabs.length;
+  if (memSeg) memSeg.innerText = 'DISK: ' + calcDisk() + 'KB';
+}
+setInterval(updateStatusBar, 5000);
+
+// ════════════════════════════════════════════
+//  CONTEXT MENU
+// ════════════════════════════════════════════
+document.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  const menu = document.getElementById('ctx-menu');
+  menu.style.left = Math.min(e.clientX, window.innerWidth-180) + 'px';
+  menu.style.top = Math.min(e.clientY, window.innerHeight-200) + 'px';
+  menu.classList.add('show');
+});
+document.addEventListener('click', () => document.getElementById('ctx-menu').classList.remove('show'));
+
+document.getElementById('ctx-bm').onclick = bookmarkCurrent;
+document.getElementById('ctx-newtab').onclick = () => {
+  const tab = tabs.find(t=>t.id===activeTabId);
+  if (tab) newTab(tab.url);
+};
+document.getElementById('ctx-reload').onclick = navRefresh;
+document.getElementById('ctx-copy-url').onclick = () => {
+  const tab = tabs.find(t=>t.id===activeTabId);
+  if (tab) { navigator.clipboard.writeText(tab.url); showToast('URL_COPIED'); }
+};
+document.getElementById('ctx-hist').onclick = () => openPanel('hist-panel');
+document.getElementById('ctx-settings').onclick = openSettings;
+
+// ════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey) {
+    switch(e.key.toLowerCase()) {
+      case 't': e.preventDefault(); newTab(); break;
+      case 'w': e.preventDefault(); if(activeTabId) closeTab(e, activeTabId); break;
+      case 'l': e.preventDefault(); document.getElementById('url-bar').focus(); document.getElementById('url-bar').select(); break;
+      case 'd': e.preventDefault(); bookmarkCurrent(); break;
+      case ',': e.preventDefault(); openSettings(); break;
+      case 'h': e.preventDefault(); openPanel('hist-panel'); break;
+      case 'b': e.preventDefault(); openPanel('bm-panel'); break;
+      case 'j': e.preventDefault(); openPanel('dl-panel'); break;
+      case 'r': e.preventDefault(); navRefresh(); break;
+      case 'tab': e.preventDefault();
+        if (tabs.length > 1) {
+          const idx = tabs.findIndex(t=>t.id===activeTabId);
+          switchTab(tabs[(idx+1)%tabs.length].id);
+        }
+        break;
+    }
+  }
+  if (e.altKey) {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); navBack(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); navFwd(); }
+  }
+  if (e.key === 'Escape') {
+    document.getElementById('settings-modal').classList.remove('open');
+    closePlayer();
+    document.querySelectorAll('.side-panel').forEach(p=>p.classList.remove('open'));
+  }
+});
+
+// ════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = '// ' + msg + ' //';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// ════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ════════════════════════════════════════════
+//  AUTO-LOGIN (remembered session)
+// ════════════════════════════════════════════
+window.onload = () => {
+  // load saved settings early so the wallpaper also shows on the login screen
+  loadState();
+  applyWallpaper();
+  detectProxy();
+  const remembered = localStorage.getItem('ARCHIVE_SESSION');
+  if (remembered) {
+    document.getElementById('li-user').value = remembered;
+    document.getElementById('li-pass').value = '••••••';
+  }
+};
+</script>
+</body>
+</html>

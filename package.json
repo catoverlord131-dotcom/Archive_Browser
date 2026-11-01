@@ -1,0 +1,37 @@
+{
+  "name": "archive-os",
+  "version": "1.0.0",
+  "description": "ARCHIVE_OS browser",
+  "author": "ARCHIVE_OS",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win portable",
+    "exe": "pkg server.js --targets node22-win-x64 --output ARCHIVE_OS.exe"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0",
+    "@yao-pkg/pkg": "^6.0.0"
+  },
+  "build": {
+    "appId": "com.archive.os",
+    "productName": "ARCHIVE_OS",
+    "files": [
+      "main.js",
+      "server.js",
+      "archive_os_browser.html",
+      "icon.ico",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "icon.ico"
+    }
+  },
+  "pkg": {
+    "assets": [
+      "archive_os_browser.html"
+    ]
+  }
+}
